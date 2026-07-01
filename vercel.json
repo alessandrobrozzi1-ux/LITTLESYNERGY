@@ -1,0 +1,12 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/daily-keywords",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/cron/daily-publish",
+      "schedule": "0 7 * * *"
+    }
+  ]
+}

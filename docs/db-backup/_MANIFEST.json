@@ -1,0 +1,37 @@
+{
+  "timestamp": "2026-06-29T22:39:37.704Z",
+  "tables": {
+    "brands": {
+      "rows": 11,
+      "bytes": 40720
+    },
+    "articles": {
+      "rows": 116,
+      "bytes": 1139300
+    },
+    "article_embeddings": {
+      "rows": 109,
+      "bytes": 2121866
+    },
+    "keywords": {
+      "rows": 380,
+      "bytes": 148880
+    },
+    "link_expert": {
+      "rows": 1261,
+      "bytes": 542749
+    },
+    "cron_runs": {
+      "rows": 0,
+      "bytes": 2
+    },
+    "pinterest_pins": {
+      "rows": 22,
+      "bytes": 26123
+    },
+    "editorial_themes": {
+      "rows": 55,
+      "bytes": 32205
+    }
+  }
+}
