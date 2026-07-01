@@ -11,7 +11,9 @@ triggers:
   - "littlesynergy footer"
 ---
 
-# LittleSynergy — Skill di Manutenzione v1 (1 luglio 2026)
+# LittleSynergy — Skill di Manutenzione v1.1 (1 luglio 2026)
+
+> **v1.1:** EnrollerID LatAm (Alessandro 15957920) + WhatsApp (+39 348 6601210) confermati nel footer.
 
 > Blog doTERRA **bambini + mamme**, EN (root) + ES (/es). Backend Next.js su Vercel **Davidino**, Supabase **Davidino**, frontend **Lovable**, backup GitHub **Alessandro**. Live dal 1/7/2026, autopilot notturno. **NON è SoloSEO** — progetto separato, account separati, mai mischiare.
 
@@ -111,7 +113,7 @@ Tutti in `universalDoterraRules` (sempre attivo):
 
 Pattern (come essentialsynergybr): **1 shop del mercato primario + lista GATEWAY per-paese nella stessa lingua** + pillar link + WhatsApp + disclaimer bambini + «LittleSynergy Team» (mai nomi reali). Gateway = `https://office.doterra.com/Application/index.cfm?Country=XXX&EnrollerID=YYY`.
 
-⚠️ **EnrollerID split (DA CONFERMARE):** Spagna shop + gateway ESP + anglofoni (US/CA/UK) = **Davidino 15958005**. Gateway **LatAm = Alessandro 15957920** (Davidino non è attivo in quei market LatAm). Verificare in back office doTERRA per mercato. ⚠️ **doterra.com in ritiro per Europa/UK verso doterra.eu** — ricontrollare periodicamente gli URL `shop.doterra.com/GB` e `/ES`.
+✅ **EnrollerID split (CONFERMATO — decisione consapevole del proprietario):** Spagna shop + gateway ESP + anglofoni (US/CA/UK) + world-link = **Davidino 15958005**. Gateway **LatAm (MEX/COL/CHL/BRA/ECU/CRI/GTM/SLV) = Alessandro 15957920**. **Nota: il footer ES LatAm usa i token di Alessandro (non Davidino) — scelta voluta** (Davidino non è attivo in quei market LatAm; i token LatAm sono di Alessandro). ⚠️ **doterra.com in ritiro per Europa/UK verso doterra.eu** — ricontrollare periodicamente gli URL `shop.doterra.com/GB` e `/ES`.
 
 ### 5.1 — FOOTER EN (anglofoni)
 | Riga | URL verbatim |
@@ -123,7 +125,7 @@ Pattern (come essentialsynergybr): **1 shop del mercato primario + lista GATEWAY
 | Gateway CA | `https://office.doterra.com/Application/index.cfm?Country=CAN&EnrollerID=15958005` |
 | Gateway UK | `https://office.doterra.com/Application/index.cfm?Country=GBR&EnrollerID=15958005` ⚠️ GBR da verificare |
 | Pillar | `/blog/how-to-buy-doterra` |
-| WhatsApp | ⚠️ numero Davidino TBD |
+| WhatsApp | +39 348 6601210 (Davidino) |
 | Disclaimer | `*These statements have not been evaluated by the Food and Drug Administration. This content is educational and is not medical advice. Essential oils are not intended to diagnose, treat, cure, or prevent any disease. Always consult your pediatrician before using essential oils on or around children, during pregnancy, or while breastfeeding. Keep essential oils out of reach of children. Individual results may vary.*` |
 
 ### 5.2 — FOOTER ES (España + LatAm)
@@ -140,7 +142,7 @@ Pattern (come essentialsynergybr): **1 shop del mercato primario + lista GATEWAY
 | Gateway Guatemala | `…?Country=GTM&EnrollerID=15957920` |
 | Gateway El Salvador | `…?Country=SLV&EnrollerID=15957920` |
 | Pillar | `/es/blog/como-comprar-doterra-paso-a-paso-espana` |
-| WhatsApp | ⚠️ numero Davidino TBD |
+| WhatsApp | +39 348 6601210 (Davidino) |
 | Disclaimer | `*Estas afirmaciones no han sido evaluadas por las autoridades reguladoras. Este contenido es educativo y no constituye consejo médico. Los aceites esenciales no están destinados a diagnosticar, tratar, curar ni prevenir ninguna enfermedad. Consulta siempre con tu pediatra antes de usar aceites esenciales en niños, durante el embarazo o la lactancia. Mantén los aceites esenciales fuera del alcance de los niños. Los resultados individuales pueden variar.*` |
 
 ⚠️ **Formato query gateway:** preservare verbatim il prefisso di essentialsynergybr (alcuni gateway doTERRA usano `?&Country=` da NON normalizzare). Il ground-truth assoluto dei codici è il footer essentialsynergybr: in caso di dubbio, copia da lì e cambia solo l'EnrollerID.
@@ -220,7 +222,7 @@ Il corpo usa i product link del `link_expert` (31 EN Pattern-2 `www.doterra.com/
 ## §12 — REFERENCE RAPIDO
 
 - **Brand:** EN `65fc8d72-8799-4abc-a17e-da6cb6efc2df` · ES `f64c94ed-e3c4-4ebc-821c-011e06bdd89b`
-- **OwnerID/EnrollerID:** Davidino `15958005` (ES-Spain + anglo) · Alessandro `15957920` (LatAm gateway — confermare)
+- **OwnerID/EnrollerID:** Davidino `15958005` (ES-Spain + anglo US/CA/UK + world-link) · Alessandro `15957920` (LatAm gateway, scelta voluta) · **WhatsApp footer** `+39 348 6601210`
 - **Pillar:** EN `how-to-buy-doterra` · ES `como-comprar-doterra-paso-a-paso-espana`
 - **API:** `https://littlesynergy.vercel.app` · **Dominio:** `https://littlesynergy.com`
 - **Supabase:** ref `qyldowriqfsktdbqhvii` · **Vercel:** `prj_3IbX81HDxIpzfYtncuZJ7reqX0T2` / team `team_I0m9FkIxACPUsbGs06DkR0Dn`
