@@ -9,11 +9,8 @@ export interface ScoredKeyword {
 }
 
 export const NICHE_CONTEXT: Record<string, string> = {
-  es: `doTERRA España, aceites esenciales, aromaterapia, bienestar natural, aceites esenciales doTERRA,
-       negocio doTERRA España, comprar aceites esenciales, lavanda aceite, aceites esenciales usos,
-       doTERRA precio España, kit inicio doTERRA, aceites para dormir, aceites para ansiedad natural`,
-  en: `doTERRA essential oils, aromatherapy, natural wellness, essential oil uses, doTERRA starter kit,
-       lavender oil benefits, peppermint oil, frankincense oil, doTERRA business, buy essential oils`,
+  es: `Blog doTERRA para MAMÁS y NIÑOS. Aceites esenciales para bebés, niños pequeños y niños, y para mamás (embarazo, posparto, lactancia, autocuidado). SIEMPRE en contexto infantil/materno: aceites para dormir niños, aceites relajantes para niños pequeños, difusión segura en cuarto infantil, aceites suaves para bebés, aceites para mamás cansadas, autocuidado posparto, aceites seguros en el embarazo, cómo comprar doTERRA para la familia. NUNCA keywords genéricas de adultos.`,
+  en: `Blog doTERRA for MOMS and KIDS. Essential oils for babies, toddlers and children, and for moms (pregnancy, postpartum, breastfeeding, self-care). ALWAYS a kids/baby/mom/pregnancy angle: essential oils for kids' sleep, calming oils for toddlers, safe diffusing in a kids' room, gentle oils for babies, essential oils for tired moms, postpartum self-care oils, safe oils during pregnancy, how to buy doTERRA for the family. NEVER generic adult keywords.`,
   fr: `huiles essentielles doTERRA, aromathérapie, bien-être naturel, lavande huile essentielle,
        menthe poivrée, encens doTERRA, acheter huiles essentielles, huiles essentielles bienfaits`,
   de: `doTERRA ätherische Öle, Aromatherapie, natürliches Wohlbefinden, Lavendelöl, Pfefferminzöl,
@@ -24,8 +21,19 @@ export const NICHE_CONTEXT: Record<string, string> = {
        hortelã-pimenta, incenso doTERRA, comprar óleos essenciais, óleos essenciais benefícios`,
 }
 
-const NICHE_CONTEXT_DEFAULT = `doTERRA essential oils, aromatherapy, natural wellness, essential oil uses,
-  lavender oil benefits, peppermint oil, frankincense oil, buy essential oils`
+const NICHE_CONTEXT_DEFAULT = `doTERRA essential oils for kids, babies and moms: kids' sleep, calming oils for toddlers,
+  gentle oils for babies, oils for tired moms, safe oils during pregnancy, how to buy doTERRA for the family`
+
+// L3 GUARD — a keyword is on-niche ONLY if it carries a kids/baby/toddler/child/mom/pregnancy modifier.
+// Whitelist per lingua. Le lingue senza guardia passano (return true).
+const NICHE_MODIFIER: Record<string, RegExp> = {
+  en: /\b(kids?|bab(y|ies)|toddlers?|child(ren)?|infants?|newborns?|pregnan(t|cy)|nursing|breastfeeding|moms?|mothers?|maternity|nursery)\b/i,
+  es: /\b(niñ[oa]s?|beb[eé]s?|embaraz(o|ada|adas)|lactancia|mam[áa]s?|madres?|pequeñ[oa]s?|infantil(es)?)\b/i,
+}
+export function hasNicheModifier(keyword: string, languageCode: string): boolean {
+  const re = NICHE_MODIFIER[languageCode]
+  return re ? re.test(keyword) : true
+}
 
 export async function scoredKeywords(languageCode: string, usedKeywords: Set<string>, nicheContext?: string): Promise<ScoredKeyword[]> {
   const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -53,6 +61,8 @@ Generate 6 SEO keyword ideas. For each keyword provide:
 Prioritize: high relevance (8-10) + medium/high volume + easy/medium difficulty = best opportunity.
 Focus on informational and commercial intent keywords.
 
+CRITICAL NICHE RULE (mandatory): EVERY keyword MUST be in the context of CHILDREN, BABIES, TODDLERS, MOMS, PREGNANCY or BREASTFEEDING (e.g. "essential oils for kids' sleep", "safe oils during pregnancy", "calming oils for toddlers", "aceites para dormir niños"). NEVER return a generic adult essential-oil keyword (e.g. "essential oils for sleep", "lavender oil benefits", "aromatherapy at home", "aceites para dormir mejor"). If a keyword lacks a kids/baby/toddler/child/mom/pregnancy angle, do NOT include it.
+
 Return ONLY valid JSON array, no explanation:
 [{"keyword":"...","volume":"medium","difficulty":"easy","relevance":9}, ...]`,
     }],
@@ -74,6 +84,7 @@ Return ONLY valid JSON array, no explanation:
 
   return raw
     .filter((k) => k.keyword && !usedKeywords.has(k.keyword.toLowerCase()))
+    .filter((k) => hasNicheModifier(k.keyword, languageCode))  // L3 guard: scarta keyword senza modificatore nicchia
     .map((k) => ({
       ...k,
       score: (k.relevance * 2) + volumeScore[k.volume] + difficultyScore[k.difficulty],

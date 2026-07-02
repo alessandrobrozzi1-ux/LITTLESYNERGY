@@ -26,12 +26,12 @@ const THEMES_BY_LANGUAGE = {
     {
       theme_name: 'Mom Self-Care — EN',
       description: 'Essential oils for mothers: postpartum, energy, stress relief, everyday self-care',
-      keywords: ['essential oils for moms', 'postpartum self care essential oils', 'essential oils for tired moms', 'stress relief oils for mothers', 'self care routine essential oils'],
+      keywords: ['essential oils for moms', 'essential oils for postpartum moms', 'essential oils for tired moms', 'safe essential oils during pregnancy', 'self-care essential oils for new moms'],
     },
     {
       theme_name: 'Family Home Diffusing — EN',
       description: 'Safe diffusing habits and pleasant aromas for shared family spaces and kids\' rooms',
-      keywords: ['diffuser blends for kids room', 'safe diffusing around children', 'essential oil diffuser for family', 'kids room aromatherapy', 'family diffuser recipes'],
+      keywords: ['diffuser blends for kids room', 'safe diffusing around children', 'essential oil diffuser for a baby room', 'kids room aromatherapy', 'diffuser recipes for kids'],
     },
     {
       theme_name: 'How to Buy doTERRA — EN',
@@ -54,12 +54,12 @@ const THEMES_BY_LANGUAGE = {
     {
       theme_name: 'Autocuidado Mamá — ES',
       description: 'Aceites esenciales para mamás: posparto, energía, alivio del estrés, autocuidado diario',
-      keywords: ['aceites esenciales para mamás', 'aceites esenciales posparto', 'aceites para mamás cansadas', 'aceites para el estrés de las madres', 'rutina de autocuidado con aceites'],
+      keywords: ['aceites esenciales para mamás', 'aceites esenciales para mamás en posparto', 'aceites para mamás cansadas', 'aceites seguros en el embarazo', 'aceites de autocuidado para mamás nuevas'],
     },
     {
       theme_name: 'Difusión en Casa Familiar — ES',
       description: 'Hábitos de difusión seguros y aromas agradables para espacios familiares y cuartos infantiles',
-      keywords: ['mezclas de difusor para cuarto de niños', 'difundir aceites de forma segura con niños', 'difusor de aceites para la familia', 'aromaterapia cuarto infantil', 'recetas de difusor familiares'],
+      keywords: ['mezclas de difusor para cuarto de niños', 'difundir aceites de forma segura con niños', 'difusor de aceites para el cuarto del bebé', 'aromaterapia cuarto infantil', 'recetas de difusor para niños'],
     },
     {
       theme_name: 'Cómo Comprar doTERRA — ES',

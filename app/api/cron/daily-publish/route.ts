@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import { bestKeywordForToday } from '@/lib/keyword-scorer'
+import { bestKeywordForToday, hasNicheModifier } from '@/lib/keyword-scorer'
 import { fetchTrendingKeywords } from '@/lib/trends'
 import OpenAI from 'openai'
 import sharp from 'sharp'
@@ -105,6 +105,7 @@ async function getKeywordForBrand(
   }
 
   function isAllowed(kw: string): boolean {
+    if (!hasNicheModifier(kw, languageCode)) return false                    // L3 guard: solo keyword nicchia bambini/mamme
     if (usedSet.has(kw.toLowerCase())) return false                          // exact duplicate
     if (last7.some(prev => jaccard(kw, prev) > 0.6)) return false           // >60% similar
     // Lavender capped at 2/14 days (~once per week); other themes 3/14 days
