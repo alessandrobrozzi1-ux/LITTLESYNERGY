@@ -11,8 +11,9 @@ triggers:
   - "littlesynergy footer"
 ---
 
-# LittleSynergy — Skill di Manutenzione v1.1 (1 luglio 2026)
+# LittleSynergy — Skill di Manutenzione v1.2 (1 luglio 2026)
 
+> **v1.2:** keyword-guard nicchia bambini a 3 livelli (§7.1) · loophole "own use" chiuso nel childrenSafety (§2.7) · link_expert importato dal main (172 prodotti, 140 EN + 106 ES, OwnerID 15958005).
 > **v1.1:** EnrollerID LatAm (Alessandro 15957920) + WhatsApp (+39 348 6601210) confermati nel footer.
 
 > Blog doTERRA **bambini + mamme**, EN (root) + ES (/es). Backend Next.js su Vercel **Davidino**, Supabase **Davidino**, frontend **Lovable**, backup GitHub **Alessandro**. Live dal 1/7/2026, autopilot notturno. **NON è SoloSEO** — progetto separato, account separati, mai mischiare.
@@ -64,6 +65,9 @@ triggers:
 - **SEMPRE** ricordare di **consultare il pediatra** prima dell'uso su/attorno a un bambino + seguire etichetta doTERRA.
 - **SEMPRE** nota «tenere fuori dalla portata dei bambini» dove si parla di uso con bambini.
 - **Registro esperienziale, gentile, mamma-a-mamma:** rituali serali di calma, aromi piacevoli in casa, diffusione in spazi condivisi, autocura della mamma. Descrivi profumo/atmosfera/rituali quotidiani, MAI fisiologia/malattia/cura. Nel dubbio, PIÙ cauti.
+
+### 2.7 — NO "OWN USE" LOOPHOLE (l'ambiente governa) — v1.2
+Chiuso il buco per cui il modello inquadrava dose/diffusione come «uso personale della mamma» per aggirare le regole. **La cautela vale sulla STANZA CONDIVISA che il bambino respira, non su chi usa l'olio.** Se un bambino è (o può essere) presente: (a) MAI diffondere oli alto-mentolo «for yourself»/«para ti» in una stanza che un piccolo condivide; (b) MAI far passare un numero TOPico riframandolo come «la dose della mamma». La policy gocce-diffusore ambientali generiche (§2.1) resta. **Scan:** flag own-use aggiunto alla regex KIDS (EN: `your own/for yourself/for mom + numero` o `menthol + your own`; ES: `para ti/uso personal + gotas` o `menta + para ti`).
 
 ### 2.2 — NAMED HIGH-RISK OILS (nominati, mai «adatti/sicuri per bambini»)
 - **CALDI / irritanti** (Cinnamon, Clove, Oregano, Thyme): MAI sulla pelle di un bambino.
@@ -148,7 +152,7 @@ Pattern (come essentialsynergybr): **1 shop del mercato primario + lista GATEWAY
 ⚠️ **Formato query gateway:** preservare verbatim il prefisso di essentialsynergybr (alcuni gateway doTERRA usano `?&Country=` da NON normalizzare). Il ground-truth assoluto dei codici è il footer essentialsynergybr: in caso di dubbio, copia da lì e cambia solo l'EnrollerID.
 
 ### 5.3 — Link prodotto nel CORPO (diverso dal footer)
-Il corpo usa i product link del `link_expert` (31 EN Pattern-2 `www.doterra.com/US/en/p/[slug]/?OwnerID=15958005`, 31 ES Pattern-1 `shop.doterra.com/ES/es_ES/shop/[slug]/?OwnerID=15958005`). `sanitizeProductUrls` mantiene solo gli slug verificati, gli altri → fallback shop. Il footer multi-paese è un chooser separato; il corpo EN linka US, il corpo ES linka España.
+Il corpo usa i product link del `link_expert` — **importati dal main** (essentialsynergybr) via `scripts/import-link-expert-from-main.mjs` da `link-expert-export-main.json`: **172 prodotti → 140 righe EN + 106 ES** (OwnerID swap 15957920→**15958005**, matching per-lingua intrinseco `url_en`→EN/`url_es`→ES, 0 mix). EN Pattern-2 `www.doterra.com/US/en/p/[slug]/?OwnerID=15958005`, ES Pattern-1 `shop.doterra.com/ES/es_ES/shop/[slug]/?OwnerID=15958005`. `sanitizeProductUrls` mantiene solo gli slug verificati, gli altri → fallback shop. Il footer multi-paese è un chooser separato; il corpo EN linka US, il corpo ES linka España. Re-import/allineamento: rilancia l'importer (replace delete+insert).
 
 ---
 
@@ -174,6 +178,13 @@ Il corpo usa i product link del `link_expert` (31 EN Pattern-2 `www.doterra.com/
 - **Operating point Hobby 60s:** `generate-article` chiude **<60s** → il TESTO si salva SEMPRE (nessun orfano-di-testo). L'orchestratore `daily-publish` (2 brand + immagine inline) muore a 60s → alcune immagini nascono `null`.
 - **Backfill immagini:** endpoint `/api/cron/backfill-images` (gated `CRON_SECRET`, idempotente, ~1 img/call sotto il cap). Hobby = max 2 cron giornalieri → **pinger esterno `cron-job.org`** (account Davidino): GET `https://littlesynergy.vercel.app/api/cron/backfill-images`, schedule `*/3 7 * * *` UTC, header `Authorization: Bearer <CRON_SECRET>`. **DEVE essere armato PRIMA di active=TRUE.**
 - **Keyword:** pool da `editorial_themes` (25/brand). Il `daily-publish` pesca lì + pytrends + AI fallback, evitando le usate (30gg).
+
+### §7.1 — KEYWORD-GUARD NICCHIA BAMBINI (3 livelli) — v1.2
+Fix del drift (il cron generava keyword generiche adulti, es. "essential oils for sleep" invece di "…for kids"). Tre livelli:
+- **L1** `editorial_themes` (`scripts/lib/editorial-themes-by-language.js`): tutte le keyword con modificatore esplicito (kids/baby/toddler/mom/pregnancy) + gravidanza. Fallback curato.
+- **L2** `lib/keyword-scorer.ts`: `NICHE_CONTEXT` en+es riscritto bambini/mamme/gravidanza + istruzione "CRITICAL NICHE RULE" nel prompt + filtro output `hasNicheModifier`.
+- **L3** `hasNicheModifier(kw, lang)` (whitelist EN: kids/baby/toddler/child/infant/newborn/pregnancy/mom/mother… · ES: niño/bebé/embarazo/lactancia/mamá/pequeños/infantil): guardia in `scoredKeywords` E in `daily-publish` `isAllowed` → scarta ogni keyword senza modificatore. Se scarta tutto → fallback `editorial_themes`.
+- Test: 11/11 keyword generate = tutte nicchia. Le lingue senza whitelist passano (`return true`).
 
 ---
 
