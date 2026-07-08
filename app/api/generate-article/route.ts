@@ -70,6 +70,25 @@ function sanitizeProductUrls(
 }
 
 
+// Extended anti-em-dash law (deterministic post-processing): strip spaced AND attached em/en-dashes
+// (—, –) from the article body, EXCEPT the byline (the italic author line, which legitimately uses " — ").
+// Byline detection: an italic line (starts with "*") that names the brand. Covers EN + ES bylines.
+function stripEmDashes(content: string): string {
+  return content.split('\n').map((line) => {
+    const t = line.trim()
+    if (t.startsWith('*') && /LittleSynergy/i.test(line)) return line // byline: leave intact
+    return line
+      .replace(/\s*[—–]\s*/g, ', ')      // "a — b" and "a—b" → "a, b"
+      .replace(/ ,/g, ',')
+      .replace(/,\s*,/g, ',')
+      .replace(/,\s*([.!?;:])/g, '$1')
+  }).join('\n')
+}
+// Plain strip for single-line fields (title, meta) — no byline present there.
+function stripDashLine(s: string): string {
+  return s.replace(/\s*[—–]\s*/g, ', ').replace(/,\s*,/g, ',').replace(/,\s*([.!?;:])/g, '$1').trim()
+}
+
 interface LinkExpertEntry { anchor_text: string; full_url: string }
 
 // GEO v3.1 — localized author attribution line (E-E-A-T signal, rendered in italics right after H1)
@@ -146,7 +165,7 @@ UAE & Gulf (GCC/GSO) law forbids medical/therapeutic claims for non-medicinal we
 - The 25% is a DISCOUNT on the doTERRA catalogue (member price vs retail price). NEVER describe it as "lifetime" / "forever" / "permanent" / "permanente" / "standing" / "définitif" / "a vita" / "à vie" / "voor het leven" / "na zawsze" or any perpetual/standing-guarantee wording — it is simply the member price, applied to member purchases, not a perpetual guarantee.
 - CPTG = "Certified Pure Tested Grade" — doTERRA's OWN purity and testing standard. NEVER write "therapeutic grade", "therapeutic quality" or any local "therapeutic" equivalent (terapéutico / terapeutico / therapeutische / terapeutic). Describe it as doTERRA's testing and purity standard, attributed to doTERRA.
 - PRICES: NEVER state specific prices in any currency (€, $, zł, CHF, etc.) for products, kits or the membership fee. You cannot know accurate current prices and invented figures damage credibility. Speak relatively only: "member price", "25% off the retail price", "a small annual fee waived on orders over 150 PV".
-- STYLE: NEVER use a spaced em-dash " — " anywhere as a separator. This is mandatory. Use commas, parentheses, colons or full stops instead.
+- STYLE: NEVER use an em-dash or en-dash (—, –) anywhere, whether spaced ( — ) or attached (word—word). This is mandatory. Use commas, parentheses, colons or full stops instead. (A deterministic post-processor also strips them, so write clean.)
 
 ═══ INCOME CLAIMS — ZERO TOLERANCE (highest legal risk: FTC / DSA / regulators) ═══
 This rule applies to EVERY language and EVERY market, with no exception.
@@ -181,6 +200,8 @@ This blog is read by PARENTS of babies, toddlers and children, and by mothers (i
   If any of these is mentioned, state plainly it is best kept away from young children / off children's skin, and to ask a pediatrician.
 - DIFFUSION SAFETY — HIGH-MENTHOL / 1,8-CINEOLE oils (Peppermint, Eucalyptus, Rosemary, Wintergreen): the diffuser-drop exception above does NOT apply to these oils around the very young. NEVER suggest DIFFUSING them around newborns, infants or very young children: the respiratory risk exists through INHALATION, not only skin contact. If diffusing them is mentioned at all, restrict it to well-ventilated SHARED spaces, NEVER a young child's bedroom or nursery, and always say to ask the pediatrician first.
 - NO "OWN USE" LOOPHOLE (the ENVIRONMENT governs, not who the oil is "for"). A diffuser or open bottle fills a SHARED space a baby or child also breathes, so the rules above hold EVEN when framed as the mother's own personal use ("for your own relaxation", "for yourself", "the parents' diffuser", "not for the baby", "para ti", "uso personal de mamá"). Specifically: (a) NEVER suggest diffusing high-menthol/1,8-cineole oils (Peppermint, Eucalyptus, Rosemary, Wintergreen) "for yourself" in a room a baby or young child shares; (b) NEVER slip a TOPICAL drop count, ml or percentage past the rule by reframing it as the mom's own amount. When a child is (or may be) in the environment, the child's safety governs, no matter who the oil is nominally "for". (The ambient diffuser-drop exception for gentle non-menthol oils still stands, kept small.)
+- NEWBORN NUMBERS — ZERO. When the subject is a NEWBORN or a baby under about six months, give NO drop count at all, not even for the diffuser: the ambient diffuser-drop exception does NOT apply to newborns. Describe amounts only qualitatively ("a tiny amount", "very sparingly", "far less than for an adult") and defer to the pediatrician. FORBIDDEN for newborns: "1-2 drops", "a couple of drops", any number of drops/ml/%.
+- PREGNANCY & BREASTFEEDING — RIGHT PROFESSIONAL. For content about pregnancy, the first trimester, or breastfeeding/nursing, direct the reader to their DOCTOR, OB or MIDWIFE (in ES: "médico, ginecólogo o matrona"), NOT only "your pediatrician" (the pediatrician is for the child, not the mother). Never give numeric dilutions for the mother either, and never claim an oil treats a pregnancy or postpartum condition.
 - HANDLING "is it safe for kids?" QUERIES (these searches are welcome, the answer must be cautious): NEVER answer "yes, it's safe". Answer that it DEPENDS on the specific oil and the child's age, give the general caution principles above (dilute generously, avoid the high-risk oils listed, prefer diffusing in shared spaces over applying to skin), and always send the reader to their pediatrician and the doTERRA label.
 - NEVER position essential oils as a substitute for pediatric medical care, vaccines, prescribed treatment or a doctor's visit.
 - ALWAYS include, naturally and in the article's language, an explicit reminder to CONSULT A PEDIATRICIAN before using any essential oil on or around a child, and to follow doTERRA's official age guidance and product labels.
@@ -421,9 +442,12 @@ export async function POST(req: NextRequest) {
       safeSlug = `${safeSlug}-${brand.language_code}`
     }
 
-    // Post-processing: sanitize any invented URLs
+    // Post-processing: sanitize any invented URLs, then strip em/en-dashes (byline preserved)
     let finalContent = parsed.content_markdown
     finalContent = sanitizeProductUrls(finalContent, brand as Brand, verifiedSlugs, worldLinkUrl)
+    finalContent = stripEmDashes(finalContent)
+    parsed.title = stripDashLine(parsed.title)
+    parsed.meta_description = stripDashLine(parsed.meta_description)
 
     // Featured image + SEO score (parallel)
     const [featuredImage, seoScore] = await Promise.all([
