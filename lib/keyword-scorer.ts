@@ -11,14 +11,11 @@ export interface ScoredKeyword {
 export const NICHE_CONTEXT: Record<string, string> = {
   es: `Blog doTERRA para MAMÁS y NIÑOS. Aceites esenciales para bebés, niños pequeños y niños, y para mamás (embarazo, posparto, lactancia, autocuidado). SIEMPRE en contexto infantil/materno: aceites para dormir niños, aceites relajantes para niños pequeños, difusión segura en cuarto infantil, aceites suaves para bebés, aceites para mamás cansadas, autocuidado posparto, aceites seguros en el embarazo, cómo comprar doTERRA para la familia. NUNCA keywords genéricas de adultos.`,
   en: `Blog doTERRA for MOMS and KIDS. Essential oils for babies, toddlers and children, and for moms (pregnancy, postpartum, breastfeeding, self-care). ALWAYS a kids/baby/mom/pregnancy angle: essential oils for kids' sleep, calming oils for toddlers, safe diffusing in a kids' room, gentle oils for babies, essential oils for tired moms, postpartum self-care oils, safe oils during pregnancy, how to buy doTERRA for the family. NEVER generic adult keywords.`,
-  fr: `huiles essentielles doTERRA, aromathérapie, bien-être naturel, lavande huile essentielle,
-       menthe poivrée, encens doTERRA, acheter huiles essentielles, huiles essentielles bienfaits`,
+  fr: `Blog doTERRA pour les MAMANS et les ENFANTS. Huiles essentielles pour bébés, tout-petits et enfants, et pour les mamans (grossesse, post-partum, allaitement, soin de soi). TOUJOURS un angle enfant/bébé/maman/grossesse: huiles pour le sommeil des enfants, huiles calmantes pour tout-petits, diffusion sûre dans la chambre d'enfant, huiles douces pour bébé, huiles pour mamans fatiguées, soin de soi post-partum, huiles sûres pendant la grossesse, comment acheter doTERRA pour la famille. JAMAIS de keywords génériques pour adultes.`,
   de: `doTERRA ätherische Öle, Aromatherapie, natürliches Wohlbefinden, Lavendelöl, Pfefferminzöl,
        Weihrauch doTERRA, ätherische Öle kaufen, Wellness Öle Deutschland`,
-  it: `oli essenziali doTERRA, aromaterapia, benessere naturale, lavanda olio essenziale,
-       menta piperita, incenso doTERRA, comprare oli essenziali, oli essenziali benefici`,
-  pt: `óleos essenciais doTERRA, aromaterapia, bem-estar natural, lavanda óleo essencial,
-       hortelã-pimenta, incenso doTERRA, comprar óleos essenciais, óleos essenciais benefícios`,
+  it: `Blog doTERRA per MAMME e BAMBINI. Oli essenziali per neonati, bambini piccoli e bambini, e per le mamme (gravidanza, post parto, allattamento, cura di sé). SEMPRE in contesto bambini/mamma: oli per il sonno dei bambini, oli calmanti per bambini piccoli, diffusione sicura nella cameretta, oli delicati per neonati, oli per mamme stanche, cura di sé post parto, oli sicuri in gravidanza, come comprare doTERRA per la famiglia. MAI keywords generiche per adulti.`,
+  pt: `Blog doTERRA para MÃES e CRIANÇAS. Óleos essenciais para bebês, crianças pequenas e crianças, e para as mães (gravidez, pós-parto, amamentação, autocuidado). SEMPRE em contexto infantil/materno: óleos para o sono das crianças, óleos calmantes para crianças pequenas, difusão segura no quarto do bebê, óleos suaves para bebês, óleos para mães cansadas, autocuidado pós-parto, óleos seguros na gravidez, como comprar doTERRA para a família. NUNCA keywords genéricas de adultos.`,
 }
 
 const NICHE_CONTEXT_DEFAULT = `doTERRA essential oils for kids, babies and moms: kids' sleep, calming oils for toddlers,
@@ -29,6 +26,9 @@ const NICHE_CONTEXT_DEFAULT = `doTERRA essential oils for kids, babies and moms:
 const NICHE_MODIFIER: Record<string, RegExp> = {
   en: /\b(kids?|bab(y|ies)|toddlers?|child(ren)?|infants?|newborns?|pregnan(t|cy)|nursing|breastfeeding|moms?|mothers?|maternity|nursery)\b/i,
   es: /\b(niñ[oa]s?|beb[eé]s?|embaraz(o|ada|adas)|lactancia|mam[áa]s?|madres?|pequeñ[oa]s?|infantil(es)?)\b/i,
+  it: /\b(bambin[oi]|neonat[oi]|lattante|gravidanza|incinta|mamm[ae]|madre|piccol[oi]|infantile)\b/i,
+  fr: /\b(enfants?|b[ée]b[ée]s?|tout-petits?|nourrissons?|grossesse|enceinte|mamans?|m[èe]res?|allaitement)\b/i,
+  pt: /\b(crian[çc]as?|beb[êé]s?|rec[ée]m-nascidos?|gravidez|gr[áa]vida|m[ãa]es?|mam[ãa]e|amamenta[çc][ãa]o|pequen[oa]s?|infantil)\b/i,
 }
 export function hasNicheModifier(keyword: string, languageCode: string): boolean {
   const re = NICHE_MODIFIER[languageCode]

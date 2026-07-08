@@ -97,87 +97,27 @@ const THEMES_BY_LANGUAGE = {
   ],
 
   it: [
-    {
-      theme_name: 'Lavanda — IT',
-      description: 'Articoli sull\'olio essenziale di lavanda: relax, sonno, cura della pelle',
-      keywords: ['olio essenziale di lavanda', 'benefici olio di lavanda', 'lavanda per dormire', 'lavanda aromaterapia', 'utilizzi olio di lavanda'],
-    },
-    {
-      theme_name: 'Benessere — IT',
-      description: 'Benessere generale, salute naturale, stile di vita con oli essenziali',
-      keywords: ['benessere naturale', 'oli essenziali routine quotidiana', 'salute olistica', 'benefici aromaterapia', 'rimedi naturali'],
-    },
-    {
-      theme_name: 'Business doTERRA — IT',
-      description: 'Opportunità di business doTERRA, kit iniziali, iscrizione',
-      keywords: ['kit iniziale doTERRA', 'iscrizione doTERRA', 'business oli essenziali', 'doTERRA all\'ingrosso', 'tessera doTERRA'],
-    },
-    {
-      theme_name: 'Menta Piperita — IT',
-      description: 'Olio di menta piperita: energia, concentrazione, digestione',
-      keywords: ['olio essenziale menta piperita', 'benefici olio di menta', 'menta per energia', 'menta per digestione', 'menta aromaterapia'],
-    },
-    {
-      theme_name: 'Incenso — IT',
-      description: 'Olio di incenso: pelle, immunità, meditazione',
-      keywords: ['olio essenziale di incenso', 'benefici olibano', 'incenso per la pelle', 'incenso meditazione', 'incenso sistema immunitario'],
-    },
+    { theme_name: 'Sonno e Calma Bambini — IT', description: 'Oli delicati e routine di diffusione per la nanna e la calma dei bambini', keywords: ['oli essenziali per il sonno dei bambini', 'oli calmanti per bambini piccoli', 'diffusore per far dormire i bambini', 'lavanda per il sonno dei bambini', 'oli rilassanti per bambini'] },
+    { theme_name: 'Oli Delicati per i Piccoli — IT', description: 'Uso prudente e per principianti intorno a neonati e bambini (sempre pediatra prima)', keywords: ['oli essenziali sicuri per bambini', 'oli essenziali delicati per bambini', 'oli doTERRA per bambini', 'oli essenziali da evitare con i bambini', 'oli essenziali per neonati'] },
+    { theme_name: 'Cura di Sé Mamma — IT', description: 'Oli essenziali per le mamme: post parto, energia, gravidanza, autocura', keywords: ['oli essenziali per mamme', 'oli essenziali post parto', 'oli per mamme stanche', 'oli essenziali sicuri in gravidanza', 'autocura con oli per neomamme'] },
+    { theme_name: 'Diffusione in Casa Famiglia — IT', description: 'Abitudini di diffusione sicure e aromi piacevoli per la cameretta dei bambini', keywords: ['diffusore oli essenziali cameretta bambini', 'diffondere oli in sicurezza con bambini', 'aromaterapia cameretta neonato', 'oli essenziali per bambini in casa', 'ricette diffusore per bambini'] },
+    { theme_name: 'Come Comprare doTERRA — IT', description: 'Pillar: come iniziare con doTERRA (registrazione gratuita, membership, oli per iniziare)', keywords: ['come comprare doTERRA', 'doTERRA per principianti', 'membership doTERRA come funziona', 'migliori oli doTERRA per iniziare', 'iniziare con doTERRA'] },
   ],
 
   fr: [
-    {
-      theme_name: 'Lavande — FR',
-      description: 'Articles sur l\'huile essentielle de lavande : relaxation, sommeil, soin de la peau',
-      keywords: ['huile essentielle lavande', 'bienfaits huile de lavande', 'lavande pour dormir', 'lavande aromathérapie', 'utilisations huile de lavande'],
-    },
-    {
-      theme_name: 'Bien-être — FR',
-      description: 'Bien-être général, santé naturelle, style de vie aux huiles essentielles',
-      keywords: ['bien-être naturel', 'huiles essentielles routine quotidienne', 'santé holistique', 'bienfaits aromathérapie', 'remèdes naturels'],
-    },
-    {
-      theme_name: 'Business doTERRA — FR',
-      description: 'Opportunité d\'affaires doTERRA, kits de démarrage, inscription',
-      keywords: ['kit de démarrage doTERRA', 'inscription doTERRA', 'business huiles essentielles', 'doTERRA grossiste', 'adhésion doTERRA'],
-    },
-    {
-      theme_name: 'Menthe Poivrée — FR',
-      description: 'Huile de menthe poivrée : énergie, concentration, digestion',
-      keywords: ['huile essentielle menthe poivrée', 'bienfaits huile de menthe', 'menthe pour l\'énergie', 'menthe digestion', 'menthe aromathérapie'],
-    },
-    {
-      theme_name: 'Encens — FR',
-      description: 'Huile d\'encens : peau, immunité, méditation',
-      keywords: ['huile essentielle encens', 'bienfaits oliban', 'encens pour la peau', 'encens méditation', 'encens immunité'],
-    },
+    { theme_name: 'Sommeil et Calme Enfants — FR', description: 'Huiles douces et routines de diffusion pour le coucher et le calme des enfants', keywords: ['huiles essentielles pour le sommeil des enfants', 'huiles calmantes pour tout-petits', 'diffuseur pour endormir les enfants', 'lavande pour le sommeil des enfants', 'huiles relaxantes pour enfants'] },
+    { theme_name: 'Huiles Douces pour les Petits — FR', description: 'Usage prudent et pour débuter autour des bébés et enfants (toujours le pédiatre d\'abord)', keywords: ['huiles essentielles sans danger pour les enfants', 'huiles essentielles douces pour enfants', 'huiles doTERRA pour enfants', 'huiles essentielles à éviter avec les enfants', 'huiles essentielles pour bébé'] },
+    { theme_name: 'Prendre Soin de Soi Maman — FR', description: 'Huiles essentielles pour les mamans: post-partum, énergie, grossesse, soin de soi', keywords: ['huiles essentielles pour mamans', 'huiles essentielles post-partum', 'huiles pour mamans fatiguées', 'huiles essentielles sûres pendant la grossesse', 'soin de soi aux huiles pour jeunes mamans'] },
+    { theme_name: 'Diffusion en Famille — FR', description: 'Habitudes de diffusion sûres et senteurs agréables pour la chambre des enfants', keywords: ['diffuseur huiles essentielles chambre enfant', 'diffuser des huiles en sécurité avec des enfants', 'aromathérapie chambre de bébé', 'huiles essentielles pour enfants à la maison', 'recettes de diffuseur pour enfants'] },
+    { theme_name: 'Comment Acheter doTERRA — FR', description: 'Pilier: comment débuter avec doTERRA (inscription gratuite, adhésion, huiles pour débuter)', keywords: ['comment acheter doTERRA', 'doTERRA pour débutants', 'adhésion doTERRA comment ça marche', 'meilleures huiles doTERRA pour débuter', 'débuter avec doTERRA'] },
   ],
 
   pt: [
-    {
-      theme_name: 'Lavanda — PT',
-      description: 'Artigos sobre óleo essencial de lavanda: relaxamento, sono, cuidado da pele',
-      keywords: ['óleo essencial de lavanda', 'benefícios óleo de lavanda', 'lavanda para dormir', 'lavanda aromaterapia', 'usos óleo de lavanda'],
-    },
-    {
-      theme_name: 'Bem-estar — PT',
-      description: 'Bem-estar geral, saúde natural, estilo de vida com óleos essenciais',
-      keywords: ['bem-estar natural', 'óleos essenciais rotina diária', 'saúde holística', 'benefícios aromaterapia', 'remédios naturais'],
-    },
-    {
-      theme_name: 'Negócio doTERRA — PT',
-      description: 'Oportunidade de negócio doTERRA, kits iniciais, inscrição',
-      keywords: ['kit inicial doTERRA', 'inscrição doTERRA', 'negócio óleos essenciais', 'doTERRA atacado', 'associação doTERRA'],
-    },
-    {
-      theme_name: 'Hortelã-Pimenta — PT',
-      description: 'Óleo de hortelã-pimenta: energia, foco, digestão',
-      keywords: ['óleo essencial hortelã-pimenta', 'benefícios óleo de hortelã', 'hortelã para energia', 'hortelã digestão', 'hortelã aromaterapia'],
-    },
-    {
-      theme_name: 'Incenso — PT',
-      description: 'Óleo de incenso: pele, imunidade, meditação',
-      keywords: ['óleo essencial de incenso', 'benefícios olíbano', 'incenso para a pele', 'incenso meditação', 'incenso imunidade'],
-    },
+    { theme_name: 'Sono e Calma Crianças — PT', description: 'Óleos suaves e rotinas de difusão para a hora de dormir e a calma das crianças', keywords: ['óleos essenciais para o sono das crianças', 'óleos calmantes para crianças pequenas', 'difusor para fazer as crianças dormirem', 'lavanda para o sono das crianças', 'óleos relaxantes para crianças'] },
+    { theme_name: 'Óleos Suaves para os Pequenos — PT', description: 'Uso prudente e para iniciantes ao redor de bebês e crianças (sempre pediatra primeiro)', keywords: ['óleos essenciais seguros para crianças', 'óleos essenciais suaves para crianças', 'óleos doTERRA para crianças', 'óleos essenciais a evitar com crianças', 'óleos essenciais para bebês'] },
+    { theme_name: 'Autocuidado Mãe — PT', description: 'Óleos essenciais para as mães: pós-parto, energia, gravidez, autocuidado', keywords: ['óleos essenciais para mães', 'óleos essenciais pós-parto', 'óleos para mães cansadas', 'óleos essenciais seguros na gravidez', 'autocuidado com óleos para mães de primeira viagem'] },
+    { theme_name: 'Difusão em Casa Família — PT', description: 'Hábitos de difusão seguros e aromas agradáveis para o quarto das crianças', keywords: ['difusor óleos essenciais quarto de bebê', 'difundir óleos com segurança com crianças', 'aromaterapia quarto do bebê', 'óleos essenciais para crianças em casa', 'receitas de difusor para crianças'] },
+    { theme_name: 'Como Comprar doTERRA — PT', description: 'Pilar: como começar com doTERRA (registro gratuito, associação, óleos para começar)', keywords: ['como comprar doTERRA', 'doTERRA para iniciantes', 'associação doTERRA como funciona', 'melhores óleos doTERRA para começar', 'começar com doTERRA'] },
   ],
 
   ro: [
