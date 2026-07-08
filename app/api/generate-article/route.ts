@@ -249,7 +249,7 @@ BRAND VOICE:
 ${brand.brand_dna_brand_voice}
 
 ═══ GEO OPTIMIZATION REQUIREMENTS (mandatory for every article) ═══
-1. FIRST 150 WORDS = DIRECT ANSWER. Open with a direct, conversational answer to the article topic in the first 100-150 words (e.g. "The short answer is…"). This is the passage AI assistants extract for AI Overviews.
+1. OPENING = ONE VARIED HOOK, THEN THE DIRECT ANSWER. Start with ONE short hook sentence that is DIFFERENT every time, a relatable scenario, a real question, a surprising fact, or a concrete everyday moment. Do NOT open every article with the same phrase (e.g. avoid always starting with the short answer): vary the lead-in. Then, within the first 100-150 words, give the direct answer, the passage AI assistants extract for AI Overviews.
 2. FAQ SECTION (mandatory). Include 4-6 real questions users actually ask, under the natural FAQ heading for ${brand.language_name}. Format each as **Question?** followed by a direct 2-3 sentence answer.
 3. STRUCTURED CONTENT. Use numbered lists for step-by-step processes, bullet points for benefits/options, and AT LEAST 1 markdown comparison table where relevant. Add an H2 every 200-300 words.
 4. EXPERIENCE SIGNALS (E-E-A-T). Weave in 1-2 natural first-person phrases ("In our experience…", "What we recommend most often is…"), translated naturally into ${brand.language_name}. Do NOT overclaim therapeutic benefits, do NOT invent customer numbers, and NEVER promise specific income, earnings, or financial results.
@@ -279,7 +279,7 @@ Keep it TIGHT: warmth lives in the VOICE, not in length. Moms skim, so ${cfg.wor
 REQUIRED STRUCTURE (follow exactly):
 1. SEO-optimized H1 title (include the keyword)
 2. Author attribution line in italics immediately under the H1 — use the EXACT line given in the GEO rules of the system prompt
-3. Introduction that OPENS with a direct 100-150 word answer to the topic (AI-Overview friendly), then leads into the article
+3. Introduction that OPENS with ONE varied hook (a relatable scenario, a real question, a surprising fact, or a concrete everyday moment, DIFFERENT for every article), THEN gives the direct 100-150 word answer to the topic (AI-Overview friendly), then leads into the article
 4. ${cfg.sections} H2 sections with focused content — include AT LEAST 1 markdown comparison table and AT LEAST 1 numbered step-by-step list
 5. FAQ section with ${cfg.faqs} questions and answers (use the appropriate FAQ heading in ${brand.language_name})
 6. Brief conclusion in ${brand.language_name} — 2-3 sentences MAX, no CTA, no links, no promotional phrases
