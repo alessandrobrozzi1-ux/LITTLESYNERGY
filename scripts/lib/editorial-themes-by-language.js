@@ -69,31 +69,11 @@ const THEMES_BY_LANGUAGE = {
   ],
 
   de: [
-    {
-      theme_name: 'Lavendel — DE',
-      description: 'Artikel über Lavendelöl: Entspannung, Schlaf, Hautpflege',
-      keywords: ['Lavendelöl ätherisches Öl', 'Lavendelöl Wirkung', 'Lavendel für den Schlaf', 'Lavendel Aromatherapie', 'Lavendelöl Anwendung'],
-    },
-    {
-      theme_name: 'Wohlbefinden — DE',
-      description: 'Allgemeines Wohlbefinden, natürliche Gesundheit, ätherische Öle Lebensstil',
-      keywords: ['natürliches Wohlbefinden', 'ätherische Öle Alltag', 'ganzheitliche Gesundheit', 'Aromatherapie Vorteile', 'natürliche Heilmittel'],
-    },
-    {
-      theme_name: 'doTERRA Business — DE',
-      description: 'doTERRA Geschäftsmöglichkeit, Starter Kits, Anmeldung',
-      keywords: ['doTERRA Starter Kit', 'doTERRA Anmeldung', 'ätherische Öle Business', 'doTERRA Großhandel', 'doTERRA Mitgliedschaft'],
-    },
-    {
-      theme_name: 'Pfefferminze — DE',
-      description: 'Pfefferminzöl: Energie, Fokus, Verdauung',
-      keywords: ['Pfefferminzöl ätherisches Öl', 'Pfefferminzöl Wirkung', 'Pfefferminze für Energie', 'Pfefferminze Verdauung', 'Pfefferminze Aromatherapie'],
-    },
-    {
-      theme_name: 'Weihrauch — DE',
-      description: 'Weihrauchöl: Haut, Immunsystem, Meditation',
-      keywords: ['Weihrauchöl ätherisches Öl', 'Weihrauch Wirkung', 'Weihrauch für die Haut', 'Weihrauch Meditation', 'Weihrauch Immunsystem'],
-    },
+    { theme_name: 'Schlaf & Ruhe Kinder — DE', description: 'Sanfte Öle und Diffusionsroutinen für das Einschlafen und die Ruhe der Kinder', keywords: ['ätherische Öle für den Schlaf von Kindern', 'beruhigende Öle für Kleinkinder', 'Diffuser zum Einschlafen für Kinder', 'Lavendel für den Kinderschlaf', 'entspannende Öle für Kinder'] },
+    { theme_name: 'Sanfte Öle für die Kleinen — DE', description: 'Umsichtiger Einsteiger-Gebrauch rund um Babys und Kinder (immer zuerst der Kinderarzt)', keywords: ['ätherische Öle sicher für Kinder', 'sanfte ätherische Öle für Kinder', 'doTERRA Öle für Kinder', 'ätherische Öle bei Kindern vermeiden', 'ätherische Öle für Babys'] },
+    { theme_name: 'Selbstfürsorge Mama — DE', description: 'Ätherische Öle für Mamas: Wochenbett, Energie, Schwangerschaft, Selbstfürsorge', keywords: ['ätherische Öle für Mamas', 'ätherische Öle Wochenbett', 'Öle für müde Mamas', 'ätherische Öle sicher in der Schwangerschaft', 'Selbstfürsorge mit Ölen für frischgebackene Mamas'] },
+    { theme_name: 'Diffusion in der Familie — DE', description: 'Sichere Diffusionsgewohnheiten und angenehme Düfte fürs Kinderzimmer', keywords: ['Diffuser ätherische Öle Kinderzimmer', 'Öle sicher diffundieren mit Kindern', 'Aromatherapie Babyzimmer', 'ätherische Öle für Kinder zu Hause', 'Diffuser Rezepte für Kinder'] },
+    { theme_name: 'doTERRA kaufen — DE', description: 'Pillar: wie man mit doTERRA startet (kostenlose Anmeldung, Mitgliedschaft, Öle zum Anfangen)', keywords: ['doTERRA kaufen', 'doTERRA für Anfänger', 'doTERRA Mitgliedschaft wie funktioniert', 'beste doTERRA Öle zum Anfangen', 'mit doTERRA anfangen'] },
   ],
 
   it: [
@@ -121,59 +101,19 @@ const THEMES_BY_LANGUAGE = {
   ],
 
   ro: [
-    {
-      theme_name: 'Lavandă — RO',
-      description: 'Articles about lavender essential oil: relaxation, sleep, skincare',
-      keywords: ['ulei esențial de lavandă', 'beneficii ulei de lavandă', 'lavandă pentru somn', 'lavandă aromaterapie', 'utilizări ulei de lavandă'],
-    },
-    {
-      theme_name: 'Wellness — RO',
-      description: 'General wellness, natural health, essential oil lifestyle',
-      keywords: ['wellness natural', 'uleiuri esențiale rutină zilnică', 'sănătate holistică', 'beneficii aromaterapie', 'remedii naturale'],
-    },
-    {
-      theme_name: 'doTERRA Business — RO',
-      description: 'doTERRA business opportunity, starter kits, enrollment',
-      keywords: ['kit de început doTERRA', 'înscriere doTERRA', 'afacere uleiuri esențiale', 'doTERRA en-gros', 'membru doTERRA'],
-    },
-    {
-      theme_name: 'Mentă — RO',
-      description: 'Peppermint oil: energy, focus, digestion, cooling',
-      keywords: ['ulei esențial de mentă', 'beneficii ulei de mentă', 'mentă pentru energie', 'mentă pentru digestie', 'mentă aromaterapie'],
-    },
-    {
-      theme_name: 'Tămâie — RO',
-      description: 'Frankincense oil: skin, meditation, immune support',
-      keywords: ['ulei esențial de tămâie', 'beneficii ulei de tămâie', 'tămâie pentru piele', 'tămâie meditație', 'tămâie sistem imunitar'],
-    },
+    { theme_name: 'Somn și Calm Copii — RO', description: 'Uleiuri blânde și rutine de difuzare pentru somnul și liniștea copiilor', keywords: ['uleiuri esențiale pentru somnul copiilor', 'uleiuri calmante pentru copii mici', 'difuzor pentru a adormi copiii', 'lavandă pentru somnul copiilor', 'uleiuri relaxante pentru copii'] },
+    { theme_name: 'Uleiuri Blânde pentru Cei Mici — RO', description: 'Folosire prudentă și pentru începători în preajma bebelușilor și copiilor (mereu întâi pediatrul)', keywords: ['uleiuri esențiale sigure pentru copii', 'uleiuri esențiale blânde pentru copii', 'uleiuri doTERRA pentru copii', 'uleiuri esențiale de evitat la copii', 'uleiuri esențiale pentru bebeluși'] },
+    { theme_name: 'Îngrijirea de Sine a Mamei — RO', description: 'Uleiuri esențiale pentru mame: post-partum, energie, sarcină, îngrijire de sine', keywords: ['uleiuri esențiale pentru mame', 'uleiuri esențiale post-partum', 'uleiuri pentru mame obosite', 'uleiuri esențiale sigure în sarcină', 'îngrijire de sine cu uleiuri pentru proaspete mămici'] },
+    { theme_name: 'Difuzare în Familie — RO', description: 'Obiceiuri de difuzare sigure și arome plăcute pentru camera copiilor', keywords: ['difuzor uleiuri esențiale camera copilului', 'difuzarea uleiurilor în siguranță cu copiii', 'aromaterapie camera bebelușului', 'uleiuri esențiale pentru copii acasă', 'rețete de difuzor pentru copii'] },
+    { theme_name: 'Cum Cumperi doTERRA — RO', description: 'Pilon: cum începi cu doTERRA (înregistrare gratuită, membru, uleiuri pentru început)', keywords: ['cum cumperi doTERRA', 'doTERRA pentru începători', 'membru doTERRA cum funcționează', 'cele mai bune uleiuri doTERRA pentru început', 'a începe cu doTERRA'] },
   ],
 
   nl: [
-    {
-      theme_name: 'Lavendel — NL',
-      description: 'Artikelen over lavendelolie: ontspanning, slaap, huidverzorging',
-      keywords: ['lavendelolie etherische olie', 'lavendelolie voordelen', 'lavendel voor slaap', 'lavendel aromatherapie', 'lavendelolie toepassingen'],
-    },
-    {
-      theme_name: 'Welzijn — NL',
-      description: 'Algemeen welzijn, natuurlijke gezondheid, etherische oliën levensstijl',
-      keywords: ['natuurlijk welzijn', 'etherische oliën dagelijks', 'holistische gezondheid', 'aromatherapie voordelen', 'natuurlijke remedies'],
-    },
-    {
-      theme_name: 'doTERRA Business — NL',
-      description: 'doTERRA zakelijke kans, starter kits, inschrijving',
-      keywords: ['doTERRA starterskit', 'doTERRA inschrijving', 'etherische oliën business', 'doTERRA groothandel', 'doTERRA lidmaatschap'],
-    },
-    {
-      theme_name: 'Pepermunt — NL',
-      description: 'Pepermuntolie: energie, focus, spijsvertering',
-      keywords: ['pepermuntolie etherische olie', 'pepermuntolie voordelen', 'pepermunt voor energie', 'pepermunt spijsvertering', 'pepermunt aromatherapie'],
-    },
-    {
-      theme_name: 'Wierook — NL',
-      description: 'Wierookolie: huid, immuunsysteem, meditatie',
-      keywords: ['wierookolie etherische olie', 'wierook voordelen', 'wierook voor huid', 'wierook meditatie', 'wierook immuunsysteem'],
-    },
+    { theme_name: 'Slaap & Rust Kinderen — NL', description: 'Zachte oliën en diffusieroutines voor het slapengaan en de rust van kinderen', keywords: ['etherische oliën voor de slaap van kinderen', 'kalmerende oliën voor peuters', 'diffuser om kinderen te laten slapen', 'lavendel voor kinderslaap', 'ontspannende oliën voor kinderen'] },
+    { theme_name: 'Zachte Oliën voor de Kleintjes — NL', description: 'Voorzichtig beginnersgebruik rond baby\'s en kinderen (altijd eerst de kinderarts)', keywords: ['etherische oliën veilig voor kinderen', 'zachte etherische oliën voor kinderen', 'doTERRA oliën voor kinderen', 'etherische oliën vermijden bij kinderen', 'etherische oliën voor baby\'s'] },
+    { theme_name: 'Zelfzorg Mama — NL', description: 'Etherische oliën voor mama\'s: kraamtijd, energie, zwangerschap, zelfzorg', keywords: ['etherische oliën voor mama\'s', 'etherische oliën kraamtijd', 'oliën voor moe mama\'s', 'etherische oliën veilig tijdens zwangerschap', 'zelfzorg met oliën voor kersverse mama\'s'] },
+    { theme_name: 'Diffusie in het Gezin — NL', description: 'Veilige diffusiegewoonten en aangename geuren voor de kinderkamer', keywords: ['diffuser etherische oliën kinderkamer', 'oliën veilig diffunderen met kinderen', 'aromatherapie babykamer', 'etherische oliën voor kinderen thuis', 'diffuser recepten voor kinderen'] },
+    { theme_name: 'doTERRA kopen — NL', description: 'Pillar: hoe begin je met doTERRA (gratis inschrijving, lidmaatschap, oliën om te starten)', keywords: ['doTERRA kopen', 'doTERRA voor beginners', 'doTERRA lidmaatschap hoe werkt het', 'beste doTERRA oliën om te starten', 'beginnen met doTERRA'] },
   ],
 
   // v3.9 — Japanese (world-link only launch). New entry, additive. Japanese-script keywords (critical for SEO).
@@ -236,31 +176,11 @@ const THEMES_BY_LANGUAGE = {
 
   // v3.12 — Polish (product pattern, EU). New entry, additive. Polish keywords.
   pl: [
-    {
-      theme_name: 'Lavender — PL',
-      description: 'Articles about lavender essential oil: relaxation, sleep, skincare',
-      keywords: ['olejek eteryczny lawendowy', 'olejek lawendowy właściwości', 'lawenda na sen', 'aromaterapia lawenda', 'zastosowanie olejku lawendowego'],
-    },
-    {
-      theme_name: 'Wellness — PL',
-      description: 'General wellness, natural health, essential oil lifestyle',
-      keywords: ['naturalny dobrostan', 'olejki eteryczne na co dzień', 'zdrowie holistyczne', 'korzyści aromaterapii', 'naturalne metody'],
-    },
-    {
-      theme_name: 'doTERRA Business — PL',
-      description: 'doTERRA business opportunity, starter kits, enrollment',
-      keywords: ['zestaw startowy doTERRA', 'rejestracja doTERRA', 'biznes olejki eteryczne', 'członkostwo doTERRA', 'jak zacząć z doTERRA'],
-    },
-    {
-      theme_name: 'Peppermint — PL',
-      description: 'Peppermint oil: energy, focus, digestion, cooling',
-      keywords: ['olejek eteryczny miętowy', 'olejek z mięty pieprzowej właściwości', 'mięta na energię', 'mięta na trawienie', 'aromaterapia mięta'],
-    },
-    {
-      theme_name: 'Frankincense — PL',
-      description: 'Frankincense oil: skin, meditation, immune support',
-      keywords: ['olejek eteryczny z kadzidłowca', 'kadzidłowiec właściwości', 'kadzidłowiec na skórę', 'kadzidłowiec medytacja', 'zastosowanie olejku z kadzidłowca'],
-    },
+    { theme_name: 'Sen i Spokój Dzieci — PL', description: 'Łagodne olejki i rytuały dyfuzji dla snu i spokoju dzieci', keywords: ['olejki eteryczne na sen dzieci', 'olejki uspokajające dla maluchów', 'dyfuzor do usypiania dzieci', 'lawenda na sen dziecka', 'olejki relaksujące dla dzieci'] },
+    { theme_name: 'Łagodne Olejki dla Maluchów — PL', description: 'Ostrożne, początkujące użycie przy niemowlętach i dzieciach (zawsze najpierw pediatra)', keywords: ['olejki eteryczne bezpieczne dla dzieci', 'łagodne olejki eteryczne dla dzieci', 'olejki doTERRA dla dzieci', 'olejki eteryczne do unikania u dzieci', 'olejki eteryczne dla niemowląt'] },
+    { theme_name: 'Dbanie o Siebie Mama — PL', description: 'Olejki eteryczne dla mam: połóg, energia, ciąża, dbanie o siebie', keywords: ['olejki eteryczne dla mam', 'olejki eteryczne połóg', 'olejki dla zmęczonych mam', 'olejki eteryczne bezpieczne w ciąży', 'dbanie o siebie z olejkami dla świeżo upieczonych mam'] },
+    { theme_name: 'Dyfuzja w Rodzinie — PL', description: 'Bezpieczne nawyki dyfuzji i przyjemne zapachy do pokoju dziecięcego', keywords: ['dyfuzor olejki eteryczne pokój dziecięcy', 'bezpieczna dyfuzja olejków z dziećmi', 'aromaterapia pokój niemowlęcy', 'olejki eteryczne dla dzieci w domu', 'przepisy do dyfuzora dla dzieci'] },
+    { theme_name: 'Jak Kupić doTERRA — PL', description: 'Filar: jak zacząć z doTERRA (bezpłatna rejestracja, członkostwo, olejki na start)', keywords: ['jak kupić doTERRA', 'doTERRA dla początkujących', 'członkostwo doTERRA jak działa', 'najlepsze olejki doTERRA na start', 'zaczynać z doTERRA'] },
   ],
 
 }

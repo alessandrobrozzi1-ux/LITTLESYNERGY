@@ -104,6 +104,7 @@ async function main() {
   const LANG_NAMES = {
     en: 'English', es: 'Spanish', de: 'German', it: 'Italian',
     fr: 'French', pt: 'Portuguese', nl: 'Dutch', pl: 'Polish',
+    ro: 'Romanian', // v3.x — Romania launch
     ja: 'Japanese', // v3.9 — Japan launch
     ar: 'Arabic', // v3.11 — UAE/Gulf launch
   }

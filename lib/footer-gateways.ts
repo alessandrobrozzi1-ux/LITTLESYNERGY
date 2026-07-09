@@ -11,6 +11,10 @@
 export const FOOTER_GATEWAYS: Record<string, string> = {
   en: 'https://office.doterra.com/Application/index.cfm?Country=USA&EnrollerID=15958005',
   es: 'https://office.doterra.com/Application/index.cfm?Country=ESP&EnrollerID=15958005',
+  de: 'https://office.doterra.com/Application/index.cfm?Country=DEU&EnrollerID=15958005',
+  nl: 'https://office.doterra.com/Application/index.cfm?Country=NLD&EnrollerID=15958005',
+  ro: 'https://office.doterra.com/Application/index.cfm?Country=ROU&EnrollerID=15958005',
+  pl: 'https://office.doterra.com/Application/index.cfm?Country=POL&EnrollerID=15958005',
 }
 
 /** Footer enrollment-gateway URL for a language, or undefined if none configured. */

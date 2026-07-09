@@ -95,15 +95,15 @@ interface LinkExpertEntry { anchor_text: string; full_url: string }
 const AUTHOR_LINES: Record<string, string> = {
   en: 'By the LittleSynergy Team — moms, Wellness Advocates & doTERRA enthusiasts',
   es: 'Por el Equipo LittleSynergy — mamás, Wellness Advocates y entusiastas doTERRA',
-  de: 'Vom Essential Synergy Team — Wellness Advocates und doTERRA Enthusiasten',
+  de: 'Vom LittleSynergy-Team, Mamas, Wellness Advocates und doTERRA-Fans',
   fr: "De l'équipe LittleSynergy, mamans, Wellness Advocates et passionnées de doTERRA",
   pt: 'Da equipa LittleSynergy, mães, Wellness Advocates e entusiastas de doTERRA',
-  ro: 'Echipa Essential Synergy — Wellness Advocates și entuziaști doTERRA',
+  ro: 'De la echipa LittleSynergy, mame, Wellness Advocates și pasionate de doTERRA',
   ja: 'Essential Synergy チーム — ウェルネスアドボケイト＆doTERRA愛好家',
   ar: 'فريق Essential Synergy — مستشارو العافية ومحبو doTERRA',
   it: 'Dal team LittleSynergy, mamme, Wellness Advocates e appassionate di doTERRA',
-  nl: 'Het Essential Synergy Team — Wellness Advocates en doTERRA-liefhebbers',
-  pl: 'Zespół Essential Synergy — Wellness Advocates i entuzjaści doTERRA',
+  nl: "Van het LittleSynergy-team, mama's, Wellness Advocates en doTERRA-liefhebbers",
+  pl: 'Od zespołu LittleSynergy, mamy, Wellness Advocates i miłośniczki doTERRA',
 }
 
 function buildSystemPrompt(brand: Brand, linkExpert: LinkExpertEntry[], worldLinkUrl?: string): string {
@@ -161,7 +161,7 @@ This blog targets PORTUGAL. Write in EUROPEAN Portuguese (pt_PT), NEVER Brazilia
     : ''
 
   // v3.12 — doTERRA purchase mechanism (product-pattern markets with buying pillars: it/nl/pl/fr). Additive, gated.
-  const productMechanism = ['it', 'nl', 'pl', 'fr', 'en', 'de'].includes(brand.language_code)
+  const productMechanism = ['it', 'nl', 'pl', 'fr', 'en', 'de', 'ro'].includes(brand.language_code)
     ? `
 
 ═══ doTERRA PURCHASE MECHANISM (mandatory for this market) ═══
@@ -283,14 +283,22 @@ const LENGTH_CONFIG = {
   long:   { words: '1400-1600', sections: '5-6', faqs: '6-8' },
 }
 
+// Cron-safe word ceiling per language (Hobby 60s cap). Verbose/slow languages get a tighter target
+// so generation stays text-safe under 60s. Latin new markets = 550-650; RTL/CJK world-link = 450-550.
+const LANG_LENGTH_OVERRIDE: Record<string, string> = {
+  de: '550-650', nl: '550-650', ro: '550-650', pl: '550-650',
+  ar: '450-550', ja: '450-550',
+}
+
 function buildUserPrompt(brand: Brand, keyword: string, length: 'short' | 'medium' | 'long' = 'medium'): string {
   const cfg = LENGTH_CONFIG[length]
+  const words = LANG_LENGTH_OVERRIDE[brand.language_code] ?? cfg.words
   // Purchase/getting-started cornerstone (footer-linked, conversion pillar): warmest, most personal mom-to-mom voice.
   const purchaseTone = /how to buy|buy doterra|join doterra|get started with doterra|become a member|c[oó]mo comprar|comprar doterra|empezar con doterra|hazte miembro|membres[ií]a/i.test(keyword)
     ? `\n\nPILLAR TONE (IMPORTANT — this is the getting-started / how-to-buy cornerstone, read by a mom deciding whether to register): make this the MOST personal, warm, mom-to-mom piece on the site. Open by meeting the reader exactly where she is ("if you're here, you're probably wondering…", "I remember feeling confused too when I first looked into this"). Tell it as your OWN lived experience in the first person ("what I figured out was…", "here's how it actually worked for me"). Reassure, never sell: no pressure, no hype, no salesy lines. The warmth must be the BACKBONE of the whole article, not a few sprinkled phrases. Keep every safety and factual rule intact (free registration, no kit required, no prices, CPTG wording, no income claims, no "lifetime" discount, children safety): only the VOICE gets warmer, never the facts.`
     : ''
-  return `Write a complete SEO article (${cfg.words} words, HARD CAP, do NOT exceed) in ${brand.language_name} about: "${keyword}"
-Keep it TIGHT: warmth lives in the VOICE, not in length. Moms skim, so ${cfg.words} words is the CEILING, never a floor to pad toward.
+  return `Write a complete SEO article (${words} words, HARD CAP, do NOT exceed) in ${brand.language_name} about: "${keyword}"
+Keep it TIGHT: warmth lives in the VOICE, not in length. Moms skim, so ${words} words is the CEILING, never a floor to pad toward.
 
 REQUIRED STRUCTURE (follow exactly):
 1. SEO-optimized H1 title (include the keyword)

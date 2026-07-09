@@ -4,7 +4,7 @@ const { createClient } = require('@supabase/supabase-js')
 const fs = require('fs'), path = require('path')
 fs.readFileSync(path.join(__dirname, '..', '.env.local'), 'utf8').split('\n').forEach(l => { const [k, ...v] = l.split('='); if (k && v.length) process.env[k.trim()] = v.join('=').trim() })
 const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_KEY)
-const ORDER = ['en', 'es', 'pt', 'fr', 'it']
+const ORDER = ['en', 'es', 'pt', 'fr', 'it', 'de', 'nl', 'ro', 'pl', 'ja', 'ar']
 const N = ORDER.length
 // ⚠️ FASE 3: aggiornare con il production URL reale del progetto Vercel Davidino dopo il primo deploy.
 const API = 'https://littlesynergy.vercel.app'
