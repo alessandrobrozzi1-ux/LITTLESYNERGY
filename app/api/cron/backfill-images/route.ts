@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import OpenAI from 'openai'
 import sharp from 'sharp'
 import { buildImagePrompt } from '@/lib/image-prompt'
+import { generateHeroImage } from '@/lib/hero-image'
 
 export const maxDuration = 60 // Hobby cap — lavoriamo DENTRO i 60s (~1 img/call)
 
@@ -16,7 +16,6 @@ type PendingArticle = {
 
 async function generateOneImage(
   supabase: ReturnType<typeof createAdminClient>,
-  openai: OpenAI,
   a: PendingArticle
 ): Promise<boolean> {
   const brand = a.brands
@@ -27,14 +26,10 @@ async function generateOneImage(
     a.content_markdown ?? undefined,
     langCode
   )
-  const gen = () => openai.images.generate({ model: 'gpt-image-2', prompt, n: 1, size: '1792x1024', quality: 'medium' })
-  let res = await gen()
-  let b64 = res.data?.[0]?.b64_json
   // 1 automatic retry (come generate-image)
-  if (!b64) { await new Promise(r => setTimeout(r, 3000)); res = await gen(); b64 = res.data?.[0]?.b64_json }
-  if (!b64) return false
-
-  const png = Buffer.from(b64, 'base64')
+  let png: Buffer
+  try { png = await generateHeroImage(prompt) }
+  catch { await new Promise(r => setTimeout(r, 3000)); try { png = await generateHeroImage(prompt) } catch { return false } }
   let out: Buffer = png, ext = 'png', ct = 'image/png'
   try { out = await sharp(png).webp({ quality: 85 }).toBuffer(); ext = 'webp'; ct = 'image/webp' } catch { /* fallback PNG */ }
 
@@ -49,7 +44,6 @@ async function generateOneImage(
 async function run() {
   const t0 = Date.now()
   const supabase = createAdminClient()
-  const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
 
   // IDEMPOTENTE: i published più vecchi senza immagine, in coda
   const { data: pending } = await supabase
@@ -65,7 +59,7 @@ async function run() {
   let done = 0
   for (const a of pending as unknown as PendingArticle[]) {
     if (Date.now() - t0 > 50000) break // guard: resta sotto i 60s → ~1 img/call su Hobby
-    if (await generateOneImage(supabase, openai, a)) done++
+    if (await generateOneImage(supabase, a)) done++
   }
 
   const { count: remaining } = await supabase

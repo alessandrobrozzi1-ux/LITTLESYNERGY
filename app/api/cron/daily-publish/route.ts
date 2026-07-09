@@ -2,9 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { bestKeywordForToday, hasNicheModifier } from '@/lib/keyword-scorer'
 import { fetchTrendingKeywords } from '@/lib/trends'
-import OpenAI from 'openai'
 import sharp from 'sharp'
 import { buildImagePrompt } from '@/lib/image-prompt'
+import { generateHeroImage } from '@/lib/hero-image'
 
 export const maxDuration = 300
 
@@ -221,14 +221,11 @@ async function run() {
           .eq('id', keywordId)
       }
 
-      // Generate image with OpenAI gpt-image-1 (same as manual flow, ~$0.01)
+      // Generate image with fal.ai FLUX.2 [turbo] (same prompt as manual flow)
       try {
-        const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
         const imgPrompt = await buildImagePrompt(keyword, (brand as Record<string, string>).brand_dna_image_style, data.article?.content_markdown ?? undefined, brand.language_code)
-        const imgRes = await openai.images.generate({ model: 'gpt-image-2', prompt: imgPrompt, n: 1, size: '1792x1024', quality: 'medium' })
-        const b64 = imgRes.data?.[0]?.b64_json
-        if (b64) {
-          const pngBuffer = Buffer.from(b64, 'base64')
+        const pngBuffer = await generateHeroImage(imgPrompt)
+        {
           let outBuffer: Buffer = pngBuffer, ext = 'png', contentType = 'image/png'
           try {
             outBuffer = await sharp(pngBuffer).webp({ quality: 85 }).toBuffer()

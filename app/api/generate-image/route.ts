@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
-import OpenAI from 'openai'
 import sharp from 'sharp'
 import { buildImagePrompt } from '@/lib/image-prompt'
+import { generateHeroImage } from '@/lib/hero-image'
 
 export const maxDuration = 120
 
@@ -16,7 +16,6 @@ export async function POST(req: NextRequest) {
     const imgSize: '1792x1024' | '1024x1536' = size === '1024x1536' ? '1024x1536' : '1792x1024'
     const targetColumn: 'featured_image' | 'pinterest_image' = target === 'pinterest_image' ? 'pinterest_image' : 'featured_image'
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
     const supabase = createAdminClient()
 
     const { data: articleData } = await supabase.from('articles')
@@ -29,28 +28,23 @@ export async function POST(req: NextRequest) {
     const effectiveStyle = image_style ?? brand?.brand_dna_image_style ?? undefined
     const prompt = await buildImagePrompt(keyword || title, effectiveStyle, articleData?.content_markdown ?? undefined, langCode)
 
-    const generateImage = async () => openai.images.generate({
-      model: 'gpt-image-2',
-      prompt,
-      n: 1,
-      size: imgSize,
-      quality: 'medium',
-    })
+    const [imgW, imgH] = imgSize.split('x').map(Number)
+    const generateImage = async () => generateHeroImage(prompt, imgW, imgH)
 
-    let response = await generateImage()
-    let b64 = response.data?.[0]?.b64_json
-
-    // 1 automatic retry on null/empty response
-    if (!b64) {
+    // 1 automatic retry on failure
+    let pngBuffer: Buffer
+    try {
+      pngBuffer = await generateImage()
+    } catch {
       await new Promise(r => setTimeout(r, 3000))
-      response = await generateImage()
-      b64 = response.data?.[0]?.b64_json
+      try {
+        pngBuffer = await generateImage()
+      } catch (e) {
+        return NextResponse.json({ error: `No image returned after retry: ${(e as Error).message}` }, { status: 500 })
+      }
     }
 
-    if (!b64) return NextResponse.json({ error: 'No image returned from API after retry' }, { status: 500 })
-
-    // Convert base64 → WebP (q85, ~15x smaller). Fallback PNG if sharp fails.
-    const pngBuffer = Buffer.from(b64, 'base64')
+    // Convert raw bytes → WebP (q85, ~15x smaller). Fallback PNG if sharp fails.
     let outBuffer: Buffer = pngBuffer, ext = 'png', contentType = 'image/png'
     try {
       outBuffer = await sharp(pngBuffer).webp({ quality: 85 }).toBuffer()
