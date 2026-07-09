@@ -27,7 +27,7 @@ const LANG = {
   nl: { aVita: /voor het leven|levenslang|voor altijd|\bpermanent\b/gi, ther: /therapeutische?/gi, mecc: /moet\s+een\s+kit\s+kopen|kit\s+(is\s+)?(verplicht|vereist|noodzakelijk)/gi },
   pl: { aVita: /na zawsze|dożywotni\w*|na całe życie|na stałe/gi, ther: /terapeutyczn\w*/gi, mecc: /musisz\s+kupić\s+(zestaw|kit)|zestaw\s+(jest\s+)?(obowiązkowy|wymagany)/gi },
   ja: { aVita: /永久|生涯|一生|永続/g, ther: /治療(グレード|効果|目的)|セラピューティック/g, mecc: /キット\w*(購入|必須|必要)/g },
-  ar: { aVita: /مدى الحياة|للأبد|دائم/g, ther: /علاجي|طبية الدرجة/g, mecc: /يجب شراء.*مجموعة|شراء.*مجموعة.*إلزامي/g },
+  ar: { aVita: /مدى الحياة|للأبد|خصم دائم|عضوية دائمة|سعر دائم/g, ther: /علاجي|طبية الدرجة/g, mecc: /يجب شراء.*مجموعة|شراء.*مجموعة.*إلزامي/g },
 }
 
 // KIDS (6° problema, LittleSynergy) — per lingua. Flag = verifica manuale.
