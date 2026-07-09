@@ -46,12 +46,15 @@ export async function GET(
     .order('published_at', { ascending: false })
     .limit(50)
 
-  // Site URL based on language
-  const siteUrl = params.language_code === 'es'
-    ? 'https://essentialsynergybr.com/es'
-    : 'https://essentialsynergybr.com'
+  // Public URL structure (mirrors the internal-link logic in generate-article):
+  // en → root, every other language → /{pathLang}/blog. ja path segment = jp.
+  const LANG_PATH_OVERRIDE: Record<string, string> = { ja: 'jp' }
+  const pathLang = LANG_PATH_OVERRIDE[params.language_code] ?? params.language_code
+  const base = 'https://littlesynergy.com'
+  const langPath = pathLang === 'en' ? '' : `/${pathLang}`
+  const siteUrl = `${base}${langPath}`
 
-  const feedUrl = `https://soloseo-cfege6036-brondors-projects.vercel.app/api/rss/${params.language_code}`
+  const feedUrl = `${base}/api/rss/${params.language_code}`
   const now = new Date().toUTCString()
 
   const items = (articles ?? []).map((a) => {
@@ -79,8 +82,8 @@ export async function GET(
   <channel>
     <title>${escapeXml(brand.brand_name)}</title>
     <link>${siteUrl}</link>
-    <description>Artículos sobre aceites esenciales doTERRA</description>
-    <language>${brand.language_code}-ES</language>
+    <description>${escapeXml(brand.brand_name)}</description>
+    <language>${brand.language_code}</language>
     <lastBuildDate>${now}</lastBuildDate>
     <atom:link href="${feedUrl}" rel="self" type="application/rss+xml"/>
     ${items}

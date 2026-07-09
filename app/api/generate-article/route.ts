@@ -421,13 +421,12 @@ export async function POST(req: NextRequest) {
       const related = await findRelatedArticles(brand_id, kwEmbedding, undefined, 2, 0.4)
       if (related.length > 0) {
         const domainBase = 'https://littlesynergy.com'
-        // EN: /blog/[slug]  |  ES/FR/IT/PT/NL: /xx/blog/[slug]  |  DE: /de/[slug] (no /blog/)
+        // EN: /blog/[slug]  |  every other language: /xx/blog/[slug] (uniform, incl. DE).
         // v3.9: public path segment may differ from language_code (ja → /jp). Additive map; default = language_code.
         const LANG_PATH_OVERRIDE: Record<string, string> = { ja: 'jp' }
         const pathLang = LANG_PATH_OVERRIDE[brand.language_code] ?? brand.language_code
-        const LANGS_WITHOUT_BLOG = new Set(['de'])
         const langPath = pathLang === 'en' ? '' : `/${pathLang}`
-        const blogPath = LANGS_WITHOUT_BLOG.has(pathLang) ? '' : '/blog'
+        const blogPath = '/blog'
         const linkLines = related.map((r, i) =>
           `${i + 1}. "${r.title}" → ${domainBase}${langPath}${blogPath}/${r.slug} (relevance: ${Math.round(r.similarity * 100)}%)`
         ).join('\n')
