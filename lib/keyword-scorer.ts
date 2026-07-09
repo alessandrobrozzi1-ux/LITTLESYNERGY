@@ -18,6 +18,8 @@ export const NICHE_CONTEXT: Record<string, string> = {
   nl: `Blog doTERRA voor MAMA'S en KINDEREN. Etherische oliën voor baby's, peuters en kinderen, en voor mama's (zwangerschap, kraamtijd, borstvoeding, zelfzorg). ALTIJD een kind/baby/mama/zwangerschap-invalshoek: etherische oliën voor kinderslaap, kalmerende oliën voor peuters, veilig diffunderen in de kinderkamer, zachte oliën voor baby's, oliën voor moe mama's, zelfzorg in de kraamtijd, veilige oliën tijdens de zwangerschap, hoe koop je doTERRA voor het gezin. NOOIT generieke volwassen-keywords.`,
   ro: `Blog doTERRA pentru MAME și COPII. Uleiuri esențiale pentru bebeluși, copii mici și copii, și pentru mame (sarcină, post-partum, alăptare, îngrijire de sine). MEREU un unghi copil/bebeluș/mamă/sarcină: uleiuri esențiale pentru somnul copiilor, uleiuri calmante pentru copii mici, difuzare sigură în camera copilului, uleiuri blânde pentru bebeluși, uleiuri pentru mame obosite, îngrijire de sine post-partum, uleiuri sigure în sarcină, cum cumperi doTERRA pentru familie. NICIODATĂ keyword-uri generice pentru adulți.`,
   pl: `Blog doTERRA dla MAM i DZIECI. Olejki eteryczne dla niemowląt, maluchów i dzieci, oraz dla mam (ciąża, połóg, karmienie piersią, dbanie o siebie). ZAWSZE ujęcie dziecko/niemowlę/mama/ciąża: olejki eteryczne na sen dzieci, olejki uspokajające dla maluchów, bezpieczna dyfuzja w pokoju dziecięcym, łagodne olejki dla niemowląt, olejki dla zmęczonych mam, dbanie o siebie w połogu, bezpieczne olejki w ciąży, jak kupić doTERRA dla rodziny. NIGDY ogólnych keywordów dla dorosłych.`,
+  ja: `doTERRAのママと子ども向けブログ。赤ちゃん・幼児・子どもと、ママ（妊娠・産後・授乳・セルフケア）のためのエッセンシャルオイル。常に子ども・赤ちゃん・ママ・妊娠の文脈で：子どもの睡眠、幼児を落ち着かせるオイル、子ども部屋での安全な拡散、赤ちゃんにやさしいオイル、疲れたママのオイル、産後のセルフケア、妊娠中に安全なオイル、家族のためのdoTERRAの買い方。大人向けの一般的なキーワードは決して使わない。`,
+  ar: `مدونة doTERRA للأمهات والأطفال. زيوت أساسية للرضّع والأطفال الصغار والأطفال، وللأمهات (الحمل، ما بعد الولادة، الرضاعة، العناية بالنفس). دائمًا في سياق الطفل/الرضيع/الأم/الحمل: زيوت لنوم الأطفال، زيوت مهدّئة للصغار، نشر آمن في غرفة الأطفال، زيوت لطيفة للرضّع، زيوت للأمهات المتعبات، العناية بالنفس بعد الولادة، زيوت آمنة أثناء الحمل، كيفية شراء doTERRA للعائلة. لا كلمات مفتاحية عامة للبالغين أبدًا.`,
 }
 
 const NICHE_CONTEXT_DEFAULT = `doTERRA essential oils for kids, babies and moms: kids' sleep, calming oils for toddlers,
@@ -36,6 +38,9 @@ const NICHE_MODIFIER: Record<string, RegExp> = {
   nl: /\b(kind|baby|peuter|dreumes|zuigeling|pasgeboren|zwanger|borstvoeding|kraamtijd|mama|moeder|kinderkamer)/i,
   ro: /\b(copil|copii|bebe|bebelu|nou-n[ăa]sc|sugar|sarcin|gravid|al[ăa]pt|mam[ăae]|mamic)/i,
   pl: /\b(dzieck|dzieci|dzieci[ęe]|niemowl|maluch|noworod|ci[ąa][żz]|mam[ay]?|matk|matek)/i,
+  // CJK/arabo: nessun word-boundary, match per sottostringa (stem distintivi)
+  ja: /(子ども|子供|こども|赤ちゃん|乳児|新生児|幼児|妊娠|妊婦|授乳|産後|ママ|ベビー|子ども部屋)/,
+  ar: /(أطفال|طفل|رضّع|رُضّع|رضيع|رضع|مواليد|حديثي الولادة|الحمل|حامل|الرضاعة|بعد الولادة|أمهات|الأمهات|للأم|الأمومة|صغار)/,
 }
 export function hasNicheModifier(keyword: string, languageCode: string): boolean {
   const re = NICHE_MODIFIER[languageCode]

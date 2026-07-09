@@ -118,60 +118,20 @@ const THEMES_BY_LANGUAGE = {
 
   // v3.9 — Japanese (world-link only launch). New entry, additive. Japanese-script keywords (critical for SEO).
   ja: [
-    {
-      theme_name: 'Lavender — JA',
-      description: 'Articles about lavender essential oil: relaxation, sleep, skincare',
-      keywords: ['ラベンダー エッセンシャルオイル', 'ラベンダーオイル 効果', 'ラベンダー 睡眠', 'ラベンダー アロマセラピー', 'ラベンダーオイル 使い方'],
-    },
-    {
-      theme_name: 'Wellness — JA',
-      description: 'General wellness, natural health, essential oil lifestyle',
-      keywords: ['ナチュラル ウェルネス', 'エッセンシャルオイル 毎日', 'ホリスティック 健康', 'アロマセラピー 効果', '自然療法'],
-    },
-    {
-      theme_name: 'doTERRA Business — JA',
-      description: 'doTERRA business opportunity, starter kits, enrollment',
-      keywords: ['doTERRA スターターキット', 'doTERRA 登録方法', 'エッセンシャルオイル ビジネス', 'doTERRA 会員', 'doTERRA 始め方'],
-    },
-    {
-      theme_name: 'Peppermint — JA',
-      description: 'Peppermint oil: energy, focus, digestion, cooling',
-      keywords: ['ペパーミント エッセンシャルオイル', 'ペパーミントオイル 効果', 'ペパーミント エネルギー', 'ペパーミント 消化', 'ペパーミント アロマ'],
-    },
-    {
-      theme_name: 'Frankincense — JA',
-      description: 'Frankincense oil: skin, immunity, meditation',
-      keywords: ['フランキンセンス エッセンシャルオイル', 'フランキンセンス 効果', 'フランキンセンス 肌', 'フランキンセンス 瞑想', 'フランキンセンス 免疫'],
-    },
+    { theme_name: '子どもの睡眠と安らぎ — JA', description: '子どもの就寝と安らぎのためのやさしいオイルと拡散の習慣', keywords: ['子ども 睡眠 エッセンシャルオイル', '幼児 落ち着く オイル', '子ども 寝かしつけ ディフューザー', '子ども 睡眠 ラベンダー', '子ども リラックス オイル'] },
+    { theme_name: '小さな子のためのやさしいオイル — JA', description: '赤ちゃんや子どもの周りでの慎重な初心者向けの使い方（必ずまず小児科医）', keywords: ['子ども 安全 エッセンシャルオイル', '子ども やさしい エッセンシャルオイル', '子ども doTERRA オイル', '子ども 避けるべき エッセンシャルオイル', '赤ちゃん エッセンシャルオイル'] },
+    { theme_name: 'ママのセルフケア — JA', description: 'ママのためのエッセンシャルオイル：産後、エネルギー、妊娠、セルフケア', keywords: ['ママ エッセンシャルオイル', '産後 エッセンシャルオイル', '疲れた ママ オイル', '妊娠中 安全 エッセンシャルオイル', '新米ママ オイル セルフケア'] },
+    { theme_name: '家族での拡散 — JA', description: '子ども部屋のための安全な拡散の習慣と心地よい香り', keywords: ['子ども部屋 ディフューザー エッセンシャルオイル', '子ども 安全 オイル 拡散', '赤ちゃん部屋 アロマ', '子ども 家 エッセンシャルオイル', '子ども ディフューザー レシピ'] },
+    { theme_name: 'doTERRAの買い方 — JA', description: '柱：doTERRAの始め方（無料登録、会員、始めるのに適したオイル）', keywords: ['doTERRA 買い方', 'doTERRA 初心者', 'doTERRA 会員 仕組み', 'doTERRA 始める おすすめ オイル', 'doTERRA 家族 始め方'] },
   ],
 
   // v3.11 — Arabic (UAE/Gulf, world-link, RTL). New entry, additive. Arabic-script keywords (critical for SEO).
   ar: [
-    {
-      theme_name: 'Lavender — AR',
-      description: 'Articles about lavender essential oil: relaxation, sleep, skincare',
-      keywords: ['زيت اللافندر العطري', 'فوائد زيت اللافندر', 'اللافندر للنوم', 'العلاج العطري باللافندر', 'استخدامات زيت اللافندر'],
-    },
-    {
-      theme_name: 'Wellness — AR',
-      description: 'General wellness, natural health, essential oil lifestyle',
-      keywords: ['العافية الطبيعية', 'الزيوت الأساسية يوميًا', 'الصحة الشاملة', 'فوائد العلاج العطري', 'العلاجات الطبيعية'],
-    },
-    {
-      theme_name: 'doTERRA Business — AR',
-      description: 'doTERRA business opportunity, starter kits, enrollment',
-      keywords: ['مجموعة بداية doTERRA', 'التسجيل في doTERRA', 'أعمال الزيوت الأساسية', 'عضوية doTERRA', 'كيفية البدء مع doTERRA'],
-    },
-    {
-      theme_name: 'Peppermint — AR',
-      description: 'Peppermint oil: energy, focus, digestion, cooling',
-      keywords: ['زيت النعناع العطري', 'فوائد زيت النعناع', 'النعناع للطاقة', 'النعناع للانتعاش', 'العلاج العطري بالنعناع'],
-    },
-    {
-      theme_name: 'Frankincense — AR',
-      description: 'Frankincense oil: skin, meditation, wellness',
-      keywords: ['زيت اللبان العطري', 'فوائد زيت اللبان', 'اللبان للبشرة', 'اللبان للتأمل', 'استخدامات زيت اللبان'],
-    },
+    { theme_name: 'نوم الأطفال وهدوؤهم — AR', description: 'زيوت لطيفة وعادات نشر لنوم الأطفال وهدوئهم', keywords: ['زيوت أساسية لنوم الأطفال', 'زيوت مهدّئة للأطفال الصغار', 'ناشر لتنويم الأطفال', 'لافندر لنوم الأطفال', 'زيوت مريحة للأطفال'] },
+    { theme_name: 'زيوت لطيفة للصغار — AR', description: 'استخدام حذر ومبتدئ حول الرضّع والأطفال (طبيب الأطفال أولًا دائمًا)', keywords: ['زيوت أساسية آمنة للأطفال', 'زيوت أساسية لطيفة للأطفال', 'زيوت doTERRA للأطفال', 'زيوت أساسية يجب تجنّبها مع الأطفال', 'زيوت أساسية للرضّع'] },
+    { theme_name: 'العناية بالنفس للأم — AR', description: 'زيوت أساسية للأمهات: ما بعد الولادة، الطاقة، الحمل، العناية بالنفس', keywords: ['زيوت أساسية للأمهات', 'زيوت أساسية بعد الولادة', 'زيوت للأمهات المتعبات', 'زيوت أساسية آمنة أثناء الحمل', 'العناية بالنفس بالزيوت للأمهات الجدد'] },
+    { theme_name: 'النشر في العائلة — AR', description: 'عادات نشر آمنة وروائح لطيفة لغرفة الأطفال', keywords: ['ناشر زيوت أساسية غرفة الأطفال', 'نشر الزيوت بأمان مع الأطفال', 'علاج عطري غرفة الرضيع', 'زيوت أساسية للأطفال في المنزل', 'وصفات ناشر للأطفال'] },
+    { theme_name: 'كيفية شراء doTERRA — AR', description: 'ركيزة: كيف تبدأ مع doTERRA (تسجيل مجاني، عضوية، زيوت للبداية)', keywords: ['كيفية شراء doTERRA', 'doTERRA للمبتدئين', 'عضوية doTERRA كيف تعمل', 'أفضل زيوت doTERRA للبداية', 'البدء مع doTERRA للعائلة'] },
   ],
 
   // v3.12 — Polish (product pattern, EU). New entry, additive. Polish keywords.

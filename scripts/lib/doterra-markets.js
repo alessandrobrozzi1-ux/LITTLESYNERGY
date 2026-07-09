@@ -100,7 +100,7 @@ const DOTERRA_MARKETS = {
     // v3.9 — WORLD-LINK ONLY. JP product slugs are fragile (-jp suffixes, frequent 404).
     // Monetization runs through the worldwide enrollment gateway, NOT direct product affiliate links.
     // No productPattern / no Link Expert scraping. CTAs point only to worldLink.
-    worldLink: 'https://office.doterra.com/Application/index.cfm?Country=JPN&EnrollerID=15957920',
+    worldLink: 'https://office.doterra.com/Application/index.cfm?Country=JPN&EnrollerID=15958005',
     productPattern: null, // world-link only — no per-product affiliate URLs
     verified: true,
   },
@@ -111,7 +111,7 @@ const DOTERRA_MARKETS = {
     // v3.11 — WORLD-LINK ONLY (Gulf/RTL). Product slugs don't carry our OwnerID.
     // Monetization via worldwide enrollment gateway. No productPattern / no Link Expert.
     // Gateway URL is VERBATIM (note the "?&" — do not normalize).
-    worldLink: 'https://office.doterra.com/Application/index.cfm?&Country=ARE&EnrollerID=15957920',
+    worldLink: 'https://office.doterra.com/Application/index.cfm?&Country=ARE&EnrollerID=15958005',
     productPattern: null, // world-link only
     verified: true,
   },

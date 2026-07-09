@@ -8,6 +8,9 @@
 // PT (Portugal) is WORLD-LINK: no dedicated shop, monetized via the worldwide enrollment gateway.
 export const WORLD_LINK_GATEWAYS: Record<string, string> = {
   pt: 'https://office.doterra.com/Application/index.cfm?Country=PRT&EnrollerID=15958005',
+  ja: 'https://office.doterra.com/Application/index.cfm?Country=JPN&EnrollerID=15958005',
+  // AR keeps doTERRA's verbatim "?&" quirk in the gateway URL (mirrors doterra-markets.js).
+  ar: 'https://office.doterra.com/Application/index.cfm?&Country=ARE&EnrollerID=15958005',
 }
 
 /** Gateway URL for a world-link market, or undefined for normal product-link markets. */
