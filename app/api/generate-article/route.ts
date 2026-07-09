@@ -97,7 +97,7 @@ const AUTHOR_LINES: Record<string, string> = {
   es: 'Por el Equipo LittleSynergy — mamás, Wellness Advocates y entusiastas doTERRA',
   de: 'Vom Essential Synergy Team — Wellness Advocates und doTERRA Enthusiasten',
   fr: "De l'équipe LittleSynergy, mamans, Wellness Advocates et passionnées de doTERRA",
-  pt: 'Da equipe LittleSynergy, mães, Wellness Advocates e entusiastas de doTERRA',
+  pt: 'Da equipa LittleSynergy, mães, Wellness Advocates e entusiastas de doTERRA',
   ro: 'Echipa Essential Synergy — Wellness Advocates și entuziaști doTERRA',
   ja: 'Essential Synergy チーム — ウェルネスアドボケイト＆doTERRA愛好家',
   ar: 'فريق Essential Synergy — مستشارو العافية ومحبو doTERRA',
@@ -143,6 +143,20 @@ UAE & Gulf (GCC/GSO) law forbids medical/therapeutic claims for non-medicinal we
 - NEVER cite unverified "studies/science" to imply a therapeutic effect.
 - STAY on EXPERIENTIAL, TRADITIONAL and GENERAL-WELLNESS framing ONLY: «للاسترخاء», «يستخدمه كثيرون لـ», «يُستخدم تقليديًا لـ», «رائحة مهدّئة», «لأجواء منعشة». Describe scent, mood, ambiance and daily-life use — never disease, physiology or cure.
 - Keep the soft, non-clinical register required above.
+═══════════════════════════════════════════════════════`
+    : ''
+
+  // LittleSynergy — PT = PORTUGAL (pt_PT). Force EUROPEAN Portuguese, block Brazilian leakage. Additive, fires ONLY for pt.
+  const ptRegister = brand.language_code === 'pt'
+    ? `
+
+═══ PORTUGUESE VARIANT — EUROPEAN (pt_PT), MANDATORY, THIS MARKET ONLY ═══
+This blog targets PORTUGAL. Write in EUROPEAN Portuguese (pt_PT), NEVER Brazilian (pt_BR). This governs the TITLE, body, FAQ and meta.
+- ADDRESS THE READER AS "tu" (informal European), or impersonally — NEVER "você". Use tu-conjugations and European clitics ("ajuda-te", "lembra-te", "podes", "sente-te"), not "te ajuda" / "você pode".
+- SPELLING & LEXICON — use the European form, NOT the Brazilian one:
+  * "stress" (NOT "estresse"), "autocarro"-register vocabulary, "pequeno-almoço" (NOT "café da manhã"), "casa de banho" (NOT "banheiro"), "telemóvel" (NOT "celular"), "bebé" (NOT "bebê"), "partilhar" (NOT "compartilhar"), "ecrã", "constipação".
+  * Verb construction: prefer "estou a fazer" (European) over "estou fazendo" (Brazilian gerund).
+- Keep the warm mum-to-mum voice, but in the natural register of a Portuguese mother from Portugal, not Brazil.
 ═══════════════════════════════════════════════════════`
     : ''
 
@@ -201,6 +215,7 @@ This blog is read by PARENTS of babies, toddlers and children, and by mothers (i
 - DIFFUSION SAFETY — HIGH-MENTHOL / 1,8-CINEOLE oils (Peppermint, Eucalyptus, Rosemary, Wintergreen): the diffuser-drop exception above does NOT apply to these oils around the very young. NEVER suggest DIFFUSING them around newborns, infants or very young children: the respiratory risk exists through INHALATION, not only skin contact. If diffusing them is mentioned at all, restrict it to well-ventilated SHARED spaces, NEVER a young child's bedroom or nursery, and always say to ask the pediatrician first.
 - NO AFFILIATE LINK ON AVOID-LIST OILS. Product/shop links exist to sell what you RECOMMEND. NEVER attach a markdown link (shop.doterra.com, office.doterra.com or any URL) to an oil while you are telling the reader NOT to use it around children, i.e. any oil named in a warning, an "avoid" / "to keep away" list, or a "not for young children" caution (Peppermint, Eucalyptus, Rosemary, Wintergreen, Cinnamon, Clove, Oregano, Thyme, etc.). Name those oils as PLAIN TEXT only. Links belong ONLY on the recommended, child-safe oils. Linking an oil you just said to avoid is incoherent and pushes the reader to buy exactly the wrong product.
 - NO "OWN USE" LOOPHOLE (the ENVIRONMENT governs, not who the oil is "for"). A diffuser or open bottle fills a SHARED space a baby or child also breathes, so the rules above hold EVEN when framed as the mother's own personal use ("for your own relaxation", "for yourself", "the parents' diffuser", "not for the baby", "para ti", "uso personal de mamá"). Specifically: (a) NEVER suggest diffusing high-menthol/1,8-cineole oils (Peppermint, Eucalyptus, Rosemary, Wintergreen) "for yourself" in a room a baby or young child shares; (b) NEVER slip a TOPICAL drop count, ml or percentage past the rule by reframing it as the mom's own amount. When a child is (or may be) in the environment, the child's safety governs, no matter who the oil is nominally "for". (The ambient diffuser-drop exception for gentle non-menthol oils still stands, kept small.)
+- NO AGE×DOSE SCALE OR TABLE — ABSOLUTE. NEVER build, imply or fill a scale/table/list that pairs an AGE (or age band like "6 months-2 years", "2-6 years", "over 6 years") with a drop count, a dose, a diffusion time, or a dilution. This is exactly the self-authored age-and-dose guidance that belongs ONLY to doTERRA's official label and the pediatrician, never to you. FORBIDDEN examples: a column "Age | Drops", "under 2s: 1-2 drops", "for a 3-year-old use 2-3 drops by age". You MAY say generally that children need far fewer drops than an adult and that the amount depends on the child and the oil, then defer to the pediatrician and the doTERRA label, but you must NEVER turn that into an age-graded number scheme of your own.
 - NEWBORN NUMBERS — ZERO. When the subject is a NEWBORN or a baby under about six months, give NO drop count at all, not even for the diffuser: the ambient diffuser-drop exception does NOT apply to newborns. Describe amounts only qualitatively ("a tiny amount", "very sparingly", "far less than for an adult") and defer to the pediatrician. FORBIDDEN for newborns: "1-2 drops", "a couple of drops", any number of drops/ml/%.
 - PREGNANCY & BREASTFEEDING — RIGHT PROFESSIONAL. For content about pregnancy, the first trimester, or breastfeeding/nursing, direct the reader to their DOCTOR, OB or MIDWIFE, using the correct native term (ES: "médico, ginecólogo o matrona"; IT: "medico o ostetrica"; FR: "médecin ou sage-femme"; PT: "médico ou obstetra"), NOT only "your pediatrician" (the pediatrician is for the child, not the mother). Never give numeric dilutions for the mother either, and never claim an oil treats a pregnancy or postpartum condition.
 - HANDLING "is it safe for kids?" QUERIES (these searches are welcome, the answer must be cautious): NEVER answer "yes, it's safe". Answer that it DEPENDS on the specific oil and the child's age, give the general caution principles above (dilute generously, avoid the high-risk oils listed, prefer diffusing in shared spaces over applying to skin), and always send the reader to their pediatrician and the doTERRA label.
@@ -259,7 +274,7 @@ ${brand.brand_dna_brand_voice}
 7. AUTHOR ATTRIBUTION (mandatory). Immediately after the H1 title, on its own line, output this EXACT italic author line:
 *${authorLine}*
 8. CONCISENESS (IMPORTANT). Warm does NOT mean long-winded. Moms read in a hurry, so make every sentence earn its place. Stay WITHIN the word-count target in the user prompt and do NOT exceed it, a tight warm 1000-word article beats a rambling 1400-word one. Cut filler, keep the heart.
-═══════════════════════════════════════════════════════${jpCompliance}${arCompliance}${productMechanism}${universalDoterraRules}${childrenSafety}`
+═══════════════════════════════════════════════════════${jpCompliance}${arCompliance}${ptRegister}${productMechanism}${universalDoterraRules}${childrenSafety}`
 }
 
 const LENGTH_CONFIG = {
