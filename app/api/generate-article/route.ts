@@ -205,7 +205,7 @@ This blog is read by PARENTS of babies, toddlers and children, and by mothers (i
 - NEVER give numeric TOPICAL dosages or skin-dilution amounts for children, babies or pregnant/breastfeeding women: no drop counts, ratios or percentages for anything applied to the body or added to a bath (FORBIDDEN: "1 drop on the skin", "1 drop to the bath", "2%", "1:10", "X drops per ml of carrier oil"). Skin/bath dilution may ONLY be described qualitatively: "always dilute generously with a carrier oil", "use sparingly", "far more diluted than for an adult". Topical numbers are the pediatrician's job, never yours.
   * EXCEPTION — ambient DIFFUSER drop counts ARE allowed (the oil is not applied to the child), e.g. "2-3 drops in the diffuser". Keep them small and framed as "less than for an adult". This exception applies ONLY to diffusing, NEVER to skin, bath or ingestion.
 - NEVER claim an oil treats, cures, heals, prevents, relieves or manages ANY condition, symptom, illness or developmental issue in a child (no colic, teething, reflux, fever, cough, cold, ear infection, eczema, ADHD, autism, anxiety, etc.). This is a medical claim about a minor and is absolutely forbidden.
-- NEVER suggest use on NEWBORNS or INFANTS, and NEVER state a specific age in numbers as a fact of your own: FORBIDDEN to write "under 6 years", "over 2 years old", "from 3 months", "menores de 6 años", "a partir de los 2 años" or any self-authored age threshold, minimum or cutoff. Age guidance is doTERRA's and the pediatrician's job: always defer to "doTERRA's official age guidance on the product label" and "your pediatrician", never a number you chose. A wrong number is a real risk.
+- NEVER suggest use on NEWBORNS or INFANTS, and NEVER state a specific age in numbers as a fact of your own: FORBIDDEN to write "under 6 years", "over 2 years old", "from 3 months", "under six months", "menores de 6 años", "a partir de los 2 años", "poniżej szóstego miesiąca", "sotto i sei mesi" or any self-authored age threshold, minimum or cutoff. This holds EVEN when the number is meant as a CAUTION or warning (e.g. "especially babies under 6 months"): still do NOT attach a specific month/year figure. Refer to the youngest group only in WORDS, never a number: "newborns and infants", "the very young", "babies and young children", "los más pequeños", "die ganz Kleinen", "de allerkleinsten", "cei mai mici", "najmłodsze dzieci". Age guidance is doTERRA's and the pediatrician's job: always defer to "doTERRA's official age guidance on the product label" and "your pediatrician", never a number you chose. A wrong number is a real risk.
 - NEVER describe any oil as "safe for babies", "gentle enough for newborns", "100% safe", "harmless" or "no side effects" for children.
 - NAMED HIGH-RISK OILS, NEVER present these as suitable or safe for children:
   * "HOT" / irritant oils (Cinnamon, Clove, Oregano, Thyme): NEVER on a child's skin.
@@ -286,7 +286,8 @@ const LENGTH_CONFIG = {
 // Cron-safe word ceiling per language (Hobby 60s cap). Verbose/slow languages get a tighter target
 // so generation stays text-safe under 60s. Latin new markets = 550-650; RTL/CJK world-link = 450-550.
 const LANG_LENGTH_OVERRIDE: Record<string, string> = {
-  de: '550-650', nl: '550-650', ro: '550-650', pl: '550-650',
+  // Tightened after prod timing (RO 550-650 → 867w/58s, too close to the 60s cap; no text backfill).
+  de: '450-550', nl: '450-550', ro: '450-550', pl: '450-550',
   ar: '450-550', ja: '450-550',
 }
 
