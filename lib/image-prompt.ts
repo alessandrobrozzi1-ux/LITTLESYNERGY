@@ -1,23 +1,64 @@
-import OpenAI from 'openai'
+import { llmText } from './llm'
 
-// Translation cache — avoids re-translating identical keywords within the same serverless instance
+// ══════════════════════════════════════════════════════════════════════════════
+// SHARED CORE — image prompt builder (topic-varied, model-agnostic).
+// Prima il prompt immagine era 1/N distinto: buildImagePrompt faceva early-return sullo
+// style del brand (che non ha i {placeholder}) → TUTTE le immagini nascevano dallo stesso
+// prompt. Ora la scena varia per topic-bucket + hash del slug, indipendente dallo style.
+// ══════════════════════════════════════════════════════════════════════════════
+
 const _translateCache = new Map<string, string>()
+function latinRatio(s: string): number {
+  const L = s.replace(/[^\p{L}]/gu, '')
+  if (!L) return 1
+  return (L.match(/\p{Script=Latin}/gu)?.length ?? 0) / L.length
+}
+async function translateKeywordToEnglish(keyword: string, lang: string): Promise<string> {
+  if (lang === 'en' || !keyword) return keyword
+  const k = `${lang}::${keyword}`
+  if (_translateCache.has(k)) return _translateCache.get(k)!
+  const prompts = [
+    `Translate this ${lang} keyword to English. Keep product/brand names unchanged. Output ONLY the translation.\nKeyword: ${keyword}`,
+    `Translate this ${lang} search keyword into ENGLISH. Reply with the English translation ONLY, Latin letters only, no other script, no quotes.\nKeyword: ${keyword}`,
+  ]
+  for (const user of prompts) {
+    try {
+      const o = await llmText({ size: 'small', maxTokens: 60, user })
+      const t = o.trim().replace(/^["'`]+|["'`]+$/g, '')
+      if (t && latinRatio(t) > 0.8) { _translateCache.set(k, t); return t }
+    } catch { /* try next prompt */ }
+  }
+  return keyword
+}
 
-async function translateKeywordToEnglish(keyword: string, langCode: string): Promise<string> {
-  if (langCode === 'en' || !keyword) return keyword
-  const cacheKey = `${langCode}::${keyword}`
-  if (_translateCache.has(cacheKey)) return _translateCache.get(cacheKey)!
-  try {
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
-    const res = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
-      max_tokens: 50,
-      messages: [{ role: 'user', content: `Translate this ${langCode} keyword to English. Keep doTERRA product names (Lavender, Peppermint, Frankincense, On Guard, Serenity, etc.) unchanged. Output ONLY the translation, no explanation.\nKeyword: ${keyword}` }],
-    })
-    const translated = res.choices[0]?.message?.content?.trim() ?? keyword
-    _translateCache.set(cacheKey, translated)
-    return translated
-  } catch { return keyword }
+/** Alt-text = article title, single-spaced, capped at 125 chars (nativo, dal titolo). */
+export function buildImageAlt(title: string): string {
+  return (title ?? '').replace(/\s+/g, ' ').trim().slice(0, 125)
+}
+
+export type Scene = { env: string; light: string; angle: string; secondary: string }
+function hashString(s: string): number {
+  let h = 2166136261
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) }
+  return Math.abs(h)
+}
+/** Deterministica: stesso slug → stessa scena; slug diversi → scene distribuite sulla lista. */
+export function pickScene(list: Scene[], seed: string): Scene { return list[hashString(seed) % list.length] }
+
+export const AVOID_UNIVERSAL = `
+AVOID ABSOLUTELY (non-negotiable):
+- NO text, words, letters, numbers, captions or watermarks anywhere in the image.
+- NO cartoon, illustration, 3D render or generic stock-photo look. NO cluttered composition.`
+
+export type NicheConfig = {
+  subject: (topicEN: string, linked: string[]) => string
+  scenes: Record<string, Scene[]>
+  topicRules: [RegExp, string][]
+  avoid: string
+}
+function topicBucket(kw: string, rules: [RegExp, string][]): string {
+  for (const [re, b] of rules) if (re.test(kw)) return b
+  return 'default'
 }
 
 /**
@@ -713,52 +754,73 @@ function matchMultiProductScene(keyword: string): { products: [string, string, s
   return null
 }
 
-export async function buildImagePrompt(keyword: string, imageStyle?: string | null, contentMarkdown?: string, langCode?: string): Promise<string> {
-  // Translate keyword to English for consistent gpt-image-2 quality across all languages
+export async function buildImagePrompt(
+  keyword: string,
+  brandLock: string | null | undefined,
+  cfg: NicheConfig,
+  contentMarkdown?: string,
+  langCode?: string,
+  slug?: string,
+): Promise<string> {
   const kw = await translateKeywordToEnglish(keyword, langCode ?? 'en')
+  const linked = contentMarkdown ? extractLinkedProducts(contentMarkdown) : []
+  const bucket = topicBucket(kw, cfg.topicRules)
+  const scene = pickScene(cfg.scenes[bucket] ?? cfg.scenes.default, slug || keyword || kw)
+  // lo style del brand non ha {placeholder}: lo usiamo come prefisso, ripulito
+  const lock = (brandLock ?? '').replace(/\{[a-z_]+\}/g, '').trim()
+  return [
+    lock,
+    cfg.subject(kw, linked),
+    `SCENE: ${scene.env}. ${scene.light}. ${scene.angle}.`,
+    `SUPPORTING ELEMENTS: ${scene.secondary}.`,
+    `TOPIC CONTEXT: ${kw}.`,
+    'Photorealistic editorial photography, 16:9 landscape, generous negative space.',
+    AVOID_UNIVERSAL,
+    cfg.avoid,
+  ].filter(Boolean).join('\n')
+}
 
-  if (imageStyle) {
-    const linkedProducts = contentMarkdown ? extractLinkedProducts(contentMarkdown) : []
-    const botanical = extractBotanical(kw)
-    const primaryProduct = linkedProducts[0] ?? extractProduct(kw)
-    let prompt = imageStyle
-      .replace(/\{article_topic\}/g, kw)
-      .replace(/\{relevant_plant\}/g, botanical)
-      .replace(/\{doterra_product\}/g, primaryProduct)
-    if (linkedProducts.length >= 2) {
-      const secondary = linkedProducts[1]
-      prompt = prompt.replace(
-        '\nAVOID ABSOLUTELY:',
-        `\nAdditional context: ${secondary} essential oil bottle softly placed in background.\n\nAVOID ABSOLUTELY:`
-      )
-    }
-    return prompt
-  }
-
-  const linkedProducts = contentMarkdown ? extractLinkedProducts(contentMarkdown) : []
-
-  const scene = matchMultiProductScene(kw)
-  if (scene && linkedProducts.length === 0) {
-    return COLLAGE_STYLE
-      .replace(/\{article_topic\}/g, kw)
-      .replace(/\{relevant_plant\}/g, scene.botanical)
-      .replace(/\{product1\}/g, scene.products[0])
-      .replace(/\{product2\}/g, scene.products[1])
-      .replace(/\{product3\}/g, scene.products[2])
-  }
-
-  const botanical = extractBotanical(kw)
-  const primaryProduct = linkedProducts[0] ?? extractProduct(kw)
-  let prompt = DEFAULT_STYLE
-    .replace(/\{article_topic\}/g, kw)
-    .replace(/\{relevant_plant\}/g, botanical)
-    .replace(/\{doterra_product\}/g, primaryProduct)
-  if (linkedProducts.length >= 2) {
-    const secondary = linkedProducts[1]
-    prompt = prompt.replace(
-      '\nAVOID ABSOLUTELY:',
-      `\nAdditional context: ${secondary} essential oil bottle softly placed in background.\n\nAVOID ABSOLUTELY:`
-    )
-  }
-  return prompt
+// ─── NICHE CONFIG — bambini/mamme ─────────────────────────────────────────────
+export const NICHE: NicheConfig = {
+  subject: (kw, l) => `PRIMARY SUBJECT: a single ${l[0] ?? 'doTERRA'} doTERRA essential oil bottle, amber glass, BLACK matte cap, minimal white label reading "doTERRA". Sharp focus, clear hero.`,
+  topicRules: [
+    [/sleep|night|bedtime/i, 'sleep'],
+    [/calm|tantrum|anxiety|mood|relax/i, 'calm'],
+    [/skin|bath|nappy|diaper|eczema/i, 'skin'],
+    [/immun|cold|season|congest/i, 'immunity'],
+    [/focus|study|school|concentrat/i, 'focus'],
+    [/buy|guide|shop|discount|start|beginner|member/i, 'buy_guide'],
+  ],
+  scenes: {
+    sleep: [
+      { env: 'on a high nursery shelf well out of reach, a cot softly blurred in the far background', light: 'dim warm night light', angle: 'eye-level', secondary: 'dried chamomile and a folded pastel blanket' },
+      { env: 'on a windowsill above a nursery, curtains drawn, no child in frame', light: 'blue-hour dusk glow', angle: 'three-quarter close-up', secondary: 'a small ceramic diffuser and lavender sprigs' },
+    ],
+    calm: [
+      { env: "on a parent's dresser, no child in frame", light: 'soft diffused daylight', angle: 'eye-level close-up', secondary: 'lavender sprigs and cotton muslin' },
+      { env: 'on a living-room console beside a linen cushion', light: 'warm afternoon light', angle: 'three-quarter', secondary: 'a folded knit throw and dried flowers' },
+    ],
+    skin: [
+      { env: 'on a bathroom shelf above a basin, out of reach', light: 'airy morning light', angle: 'overhead flat-lay', secondary: 'a folded soft towel and calendula flowers' },
+      { env: 'on a changing-table shelf, high and out of reach, no baby in frame', light: 'bright soft daylight', angle: 'eye-level', secondary: 'a rolled muslin cloth and chamomile' },
+    ],
+    immunity: [
+      { env: 'on a kitchen shelf beside a bowl of citrus', light: 'warm daylight', angle: 'three-quarter', secondary: 'lemon and eucalyptus sprigs' },
+      { env: 'on a wooden counter near a sunny window', light: 'crisp morning light', angle: 'overhead flat-lay', secondary: 'sliced orange and fresh herbs' },
+    ],
+    focus: [
+      { env: 'on a tidy study shelf', light: 'bright side light', angle: 'eye-level', secondary: 'a small potted plant and a closed notebook' },
+      { env: 'on a desk corner by a window, no person in frame', light: 'clear daylight', angle: 'three-quarter', secondary: 'a ceramic cup and a sprig of rosemary' },
+    ],
+    buy_guide: [
+      { env: 'a small collection on a ceramic tray', light: 'studio-like daylight', angle: 'overhead flat-lay', secondary: 'three doTERRA bottles and botanicals' },
+      { env: 'a neat trio on a marble surface', light: 'soft studio light', angle: 'three-quarter', secondary: 'doTERRA bottles, a linen napkin and eucalyptus' },
+    ],
+    default: [
+      { env: 'on a pastel shelf in a cosy home, out of reach', light: 'gentle daylight', angle: 'three-quarter', secondary: 'soft botanicals and linen' },
+      { env: 'on a wooden mantel in a warm family room, no child in frame', light: 'soft golden light', angle: 'eye-level', secondary: 'dried flowers and a folded blanket' },
+    ],
+  },
+  avoid: `
+CHILD-SAFETY (mandatory): NEVER a newborn/infant near the oils; NEVER a bottle or drops in a child's hand; NEVER drops or an open bottle near a child's face; any diffuser placed HIGH and OUT OF REACH; any child softly out of focus and separate from the oils. NO white/gold/silver cap, NO competitor bottles.`,
 }

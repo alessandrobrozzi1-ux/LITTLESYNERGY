@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import sharp from 'sharp'
-import { buildImagePrompt } from '@/lib/image-prompt'
+import { buildImagePrompt, NICHE } from '@/lib/image-prompt'
 import { generateHeroImage } from '@/lib/hero-image'
 
 export const maxDuration = 60 // Hobby cap — lavoriamo DENTRO i 60s (~1 img/call)
 
 type PendingArticle = {
   id: string
+  slug: string
   title: string
   keyword_source: string | null
   content_markdown: string | null
@@ -23,8 +24,10 @@ async function generateOneImage(
   const prompt = await buildImagePrompt(
     a.keyword_source || a.title,
     brand?.brand_dna_image_style ?? undefined,
+    NICHE,
     a.content_markdown ?? undefined,
-    langCode
+    langCode,
+    a.slug,
   )
   // 1 automatic retry (come generate-image)
   let png: Buffer
@@ -48,7 +51,7 @@ async function run() {
   // IDEMPOTENTE: i published più vecchi senza immagine, in coda
   const { data: pending } = await supabase
     .from('articles')
-    .select('id, title, keyword_source, content_markdown, brands(language_code, brand_dna_image_style)')
+    .select('id, slug, title, keyword_source, content_markdown, brands(language_code, brand_dna_image_style)')
     .eq('status', 'published')
     .is('featured_image', null)
     .order('published_at', { ascending: true })

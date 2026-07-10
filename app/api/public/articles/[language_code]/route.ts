@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { buildImageAlt } from '@/lib/image-prompt'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,7 +29,7 @@ export async function GET(
 
   const articles = (rawArticles ?? []).sort(
     (a, b) => new Date(b.published_at).getTime() - new Date(a.published_at).getTime()
-  )
+  ).map((a) => ({ ...a, featured_image_alt: a.featured_image ? buildImageAlt(a.title) : null }))
 
   return NextResponse.json(articles, {
     headers: {

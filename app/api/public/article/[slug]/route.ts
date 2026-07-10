@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
+import { buildImageAlt } from '@/lib/image-prompt'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,9 @@ export async function GET(
 
   if (!article) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  return NextResponse.json(article, {
+  const payload = { ...article, featured_image_alt: article.featured_image ? buildImageAlt(article.title) : null }
+
+  return NextResponse.json(payload, {
     headers: {
       'Access-Control-Allow-Origin': '*',
       'Cache-Control': 'no-store',

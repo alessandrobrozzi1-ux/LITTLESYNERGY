@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import sharp from 'sharp'
-import { buildImagePrompt } from '@/lib/image-prompt'
+import { buildImagePrompt, NICHE } from '@/lib/image-prompt'
 import { generateHeroImage } from '@/lib/hero-image'
 
 export const maxDuration = 120
@@ -19,14 +19,12 @@ export async function POST(req: NextRequest) {
     const supabase = createAdminClient()
 
     const { data: articleData } = await supabase.from('articles')
-      .select('content_markdown, brands(language_code, brand_dna_image_style)')
+      .select('slug, content_markdown, brands(language_code, brand_dna_image_style)')
       .eq('id', article_id).single()
     const brand = articleData?.brands as { language_code?: string; brand_dna_image_style?: string } | null
     const langCode = brand?.language_code ?? 'en'
-    // v3.0 fix: when no image_style in body, fall back to the brand's configured style (gold standard)
-    // instead of letting buildImagePrompt drop to the hardcoded DEFAULT_STYLE (fake 3D bottles).
     const effectiveStyle = image_style ?? brand?.brand_dna_image_style ?? undefined
-    const prompt = await buildImagePrompt(keyword || title, effectiveStyle, articleData?.content_markdown ?? undefined, langCode)
+    const prompt = await buildImagePrompt(keyword || title, effectiveStyle, NICHE, articleData?.content_markdown ?? undefined, langCode, articleData?.slug)
 
     const [imgW, imgH] = imgSize.split('x').map(Number)
     const generateImage = async () => generateHeroImage(prompt, imgW, imgH)
