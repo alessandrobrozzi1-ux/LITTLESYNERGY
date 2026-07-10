@@ -91,10 +91,12 @@ function stripDashLine(s: string): string {
 
 interface LinkExpertEntry { anchor_text: string; full_url: string }
 
-// Oils that must NEVER carry an affiliate link on a kids blog (mirrors the
-// "NO AFFILIATE LINK ON AVOID-LIST OILS" rule in childrenSafety). Linking ≠ endorsing:
-// an oil we warn about is named in plain text, never linked, not even via the fallback.
-const AVOID_LINK_SLUG = /(peppermint|eucalyptus|rosemary|wintergreen|cinnamon|clove|oregano|thyme)/i
+// Products the DETERMINISTIC bridge must never AUTO-INJECT a link for on a kids blog.
+// NOTE: this does NOT prune the catalogue — link_expert stays complete (Main's full scrape) and the
+// model sees every product. The contextual decision ("don't link a strong oil in a children's
+// article") lives in the childrenSafety prompt rule. This regex only keeps the automatic
+// floor-filler conservative: it never picks a strong oil, or a blend built on one, on its own.
+const AVOID_AUTOLINK_SLUG = /(peppermint|eucalyptus|rosemary|wintergreen|cinnamon|clove|oregano|thyme|deep-blue|doterra-air|zengest|onguard)/i
 
 function countDoterraLinks(md: string): number {
   return (md.match(/\[[^\]]+\]\(https?:\/\/[^)]*doterra[^)]*\)/gi) ?? []).length
@@ -114,7 +116,7 @@ function ensureDoterraBridge(content: string, linkExpert: LinkExpertEntry[], wor
   if (countDoterraLinks(out) >= 2 || worldLinkUrl) return out
 
   const candidates = linkExpert.filter(
-    (e) => e.anchor_text && e.anchor_text.length >= 3 && !AVOID_LINK_SLUG.test(e.full_url)
+    (e) => e.anchor_text && e.anchor_text.length >= 3 && !AVOID_AUTOLINK_SLUG.test(e.full_url)
   )
 
   for (const e of candidates) {
@@ -270,7 +272,10 @@ This blog is read by PARENTS of babies, toddlers and children, and by mothers (i
   * HIGH-MENTHOL / 1,8-CINEOLE oils (Peppermint, Eucalyptus, Rosemary, Wintergreen): NOT for young children, do not imply otherwise.
   If any of these is mentioned, state plainly it is best kept away from young children / off children's skin, and to ask a pediatrician.
 - DIFFUSION SAFETY — HIGH-MENTHOL / 1,8-CINEOLE oils (Peppermint, Eucalyptus, Rosemary, Wintergreen): the diffuser-drop exception above does NOT apply to these oils around the very young. NEVER suggest DIFFUSING them around newborns, infants or very young children: the respiratory risk exists through INHALATION, not only skin contact. If diffusing them is mentioned at all, restrict it to well-ventilated SHARED spaces, NEVER a young child's bedroom or nursery, and always say to ask the pediatrician first.
-- NO AFFILIATE LINK ON AVOID-LIST OILS. Product/shop links exist to sell what you RECOMMEND. NEVER attach a markdown link (shop.doterra.com, office.doterra.com or any URL) to an oil while you are telling the reader NOT to use it around children, i.e. any oil named in a warning, an "avoid" / "to keep away" list, or a "not for young children" caution (Peppermint, Eucalyptus, Rosemary, Wintergreen, Cinnamon, Clove, Oregano, Thyme, etc.). Name those oils as PLAIN TEXT only. Links belong ONLY on the recommended, child-safe oils. Linking an oil you just said to avoid is incoherent and pushes the reader to buy exactly the wrong product.
+- NO AFFILIATE LINK ON OILS YOU ARE WARNING ABOUT (contextual judgment — this is on YOU, not on the catalogue). The LINK EXPERT block gives you the FULL doTERRA catalogue on purpose: it is a reference, not a shopping list. Product/shop links exist to sell what you RECOMMEND. So: NEVER attach a markdown link (shop.doterra.com, office.doterra.com or any URL) to a product while you are telling the reader NOT to use it around children, i.e. anything named in a warning, an "avoid" / "keep away" list, or a "not for young children" caution.
+  * STRONG SINGLE OILS in a kids context: Peppermint, Eucalyptus, Rosemary, Wintergreen, Cinnamon, Clove, Oregano, Thyme. Name them, do NOT link them.
+  * BLENDS BUILT ON THOSE OILS, same rule when the article is about children: Deep Blue (wintergreen, peppermint, camphor), doTERRA Air / Breathe (eucalyptus, peppermint), ZenGest (peppermint), On Guard (cinnamon, clove, eucalyptus, rosemary). In a kids article, name them as PLAIN TEXT; link them only where the context is clearly the ADULT/mother's own use and the child-safety rules above are not in play.
+  * Links belong on the recommended, child-appropriate products. Linking a product you just told the reader to avoid is incoherent and pushes her to buy exactly the wrong thing. LINKING = ENDORSING. The catalogue is complete; the judgment about what fits a children's article is yours.
 - NO "OWN USE" LOOPHOLE (the ENVIRONMENT governs, not who the oil is "for"). A diffuser or open bottle fills a SHARED space a baby or child also breathes, so the rules above hold EVEN when framed as the mother's own personal use ("for your own relaxation", "for yourself", "the parents' diffuser", "not for the baby", "para ti", "uso personal de mamá"). Specifically: (a) NEVER suggest diffusing high-menthol/1,8-cineole oils (Peppermint, Eucalyptus, Rosemary, Wintergreen) "for yourself" in a room a baby or young child shares; (b) NEVER slip a TOPICAL drop count, ml or percentage past the rule by reframing it as the mom's own amount. When a child is (or may be) in the environment, the child's safety governs, no matter who the oil is nominally "for". (The ambient diffuser-drop exception for gentle non-menthol oils still stands, kept small.)
 - NO AGE×DOSE SCALE OR TABLE — ABSOLUTE. NEVER build, imply or fill a scale/table/list that pairs an AGE (or age band like "6 months-2 years", "2-6 years", "over 6 years") with a drop count, a dose, a diffusion time, or a dilution. This is exactly the self-authored age-and-dose guidance that belongs ONLY to doTERRA's official label and the pediatrician, never to you. FORBIDDEN examples: a column "Age | Drops", "under 2s: 1-2 drops", "for a 3-year-old use 2-3 drops by age". You MAY say generally that children need far fewer drops than an adult and that the amount depends on the child and the oil, then defer to the pediatrician and the doTERRA label, but you must NEVER turn that into an age-graded number scheme of your own.
 - NEWBORN NUMBERS — ZERO. When the subject is a NEWBORN or a baby under about six months, give NO drop count at all, not even for the diffuser: the ambient diffuser-drop exception does NOT apply to newborns. Describe amounts only qualitatively ("a tiny amount", "very sparingly", "far less than for an adult") and defer to the pediatrician. FORBIDDEN for newborns: "1-2 drops", "a couple of drops", any number of drops/ml/%.
