@@ -159,6 +159,17 @@ Da 5 a 11 lingue via CP1 (de/nl/ro/pl shop-diretto) + CP2 (ja/ar world-link), a 
 - **`nativizeAnchors` NON serve**: misurato 0 regressioni reali su 246 anchor (i "Vetiver/Ylang Ylang/Bergamot" sono nomi nativi). Non portarlo.
 - **GATE:** `node scripts/gate-deepseek.mjs gate` (sequenziale, 11 lingue, cancella i draft) e `... conc <N>` (misura concorrenza). Verde = 0 kill, 0 ≥58s, OwnerID 100%, 0 link su oli/blend forti, 0 anchor inglesi, 0 numeri-età, 0 em-dash, FAQ presente, floor ≥2. **Eseguirlo ×2**: v4-pro ha varianza.
 
+### 2.14 — GENERATORE IMMAGINI topic-varied + alt-text (v1.6)
+**Bug (era il 100% duplicati):** `buildImagePrompt` faceva **early-return sullo style del brand**, che NON ha i `{placeholder}` che il ramo si aspettava → i `.replace()` erano no-op → **tutte le immagini nascevano dallo stesso prompt di 113 char** (misurato 1/5 distinti; stesso bug del Main con 190 immagini identiche). L'`image_style` di tutti gli 11 brand è identico e senza placeholder (lo setta `create-brand`).
+- **Nuovo `buildImagePrompt(kw, brandLock, cfg, content?, lang?, slug?)`** in `lib/image-prompt.ts`: la scena si sceglie per **topic-bucket + `hash(slug)` deterministico**, indipendente dallo style (usato solo come prefisso, ripulito dei placeholder). Hero bottle = **1° prodotto linkato** dal corpo (content-aware, nome canonico EN via `PRODUCT_NAME_MAP`). Model-agnostic.
+- **`translateKeywordToEnglish` via `llmText`** (DeepSeek flash) con **retry a 2 prompt + validazione `latinRatio>0.8`** (ja/ar → topic-EN latino nel prompt immagine).
+- **`AVOID_UNIVERSAL`** (no text/parole/cartoon/3D) + **`NICHE.avoid` CHILD-SAFETY** (mai neonato vicino agli oli, mai flacone/gocce in mano, diffusore alto e fuori portata, no cap bianco/oro/argento). **`buildImageAlt`** = alt-text nativo dal titolo (125 char).
+- **`NICHE` bambini:** 7 topic-bucket (sleep/calm/skin/immunity/focus/buy_guide/default), 2 scene ciascuno.
+- **3 call-site** (`daily-publish`, `generate-image`, `backfill-images`) passano `NICHE` + `slug` (aggiunto `slug` ai select di generate-image e backfill). **ALT-TEXT** nei 2 endpoint pubblici (`featured_image_alt` dal titolo).
+- Il **cervello BAMBINI (testo)** resta INTATTO: questa patch è SOLO immagini.
+- **Gate:** offline `buildImagePrompt` su 5 topic diversi → 5 prompt DISTINTI (era 1/5), 0 testo spurio, `CHILD-SAFETY`+`OUT OF REACH`+`NO text` ovunque. E2E live: prompt distinti + traduzione ja + alt-text API 11/11.
+- ⚠️ **I 52 published hanno ancora l'immagine vecchia** (prompt identico): il fix vale sui NUOVI. Per rigenerare i vecchi → loop su `backfill` dopo aver messo `featured_image=NULL` (decisione + costo fal, non fatto in automatico).
+
 ## §3 — BLOCCHI EREDITATI DA SOLOSEO (universali, tutte le lingue)
 
 Tutti in `universalDoterraRules` (sempre attivo):
