@@ -103,6 +103,92 @@ function countDoterraLinks(md: string): number {
 }
 function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
 
+// Parole-PERICOLO per lingua (marker forti, non negazioni generiche come "not"/"nicht"/"non").
+// Usate per lo strip SENTENCE-SCOPED: in una frase di avvertenza nessun prodotto va linkato.
+const WARNING_WORDS: Record<string, RegExp> = {
+  en: /\b(avoid|never|not suitable|not safe|unsafe|keep away|keep out of|do not use|do not diffuse|don't use|don't diffuse|caution|warning)\b/i,
+  es: /\b(evita|evitar|evite|nunca|no apto|no adecuado|no seguro|mant[ée]n alejado|no uses|no difundas|precauci[óo]n|advertencia)\b/i,
+  fr: /\b([ée]vite|[ée]viter|[ée]vitez|jamais|d[ée]conseill\w*|pas adapt\w*|pas s[ûu]r\w*|[ée]loigner|ne pas utiliser|ne pas diffuser|prudence|attention)\b/i,
+  it: /\b(evita|evitare|mai|non adatt\w*|non sicur\w*|tieni lontano|non usare|non diffondere|attenzione|precauzione|sconsigliat\w*)\b/i,
+  pt: /\b(evita|evitar|evite|nunca|n[ãa]o adequad\w*|n[ãa]o segur\w*|mantenha afastad\w*|n[ãa]o use|n[ãa]o difunda|aten[çc][ãa]o|cuidado)\b/i,
+  de: /\b(vermeide|vermeiden|nie|niemals|ungeeignet|fernhalten|nicht verwenden|nicht diffundieren|nicht zerst[äa]uben|Achtung|Vorsicht)\b/i,
+  nl: /\b(vermijd|vermijden|nooit|ongeschikt|uit de buurt|niet gebruiken|niet diffunderen|let op|voorzichtig)\b/i,
+  ro: /\b(evit[ăa]|evita[țt]i|niciodat[ăa]|nu este potrivit|nu folosi|nu difuza|[țt]ine departe|aten[țt]ie|precau[țt]ie)\b/i,
+  pl: /\b(unikaj|nigdy|nieodpowiedni\w*|nie stosuj|nie u[żz]ywaj|nie dyfunduj|trzymaj z dala|uwaga|ostro[żz]nie)\b/i,
+  ja: /(避け|使わない|適さない|適していません|注意|危険|控え)/,
+  ar: /(تجنّب|تجنب|لا تستخدم|غير مناسب|احذر|تحذير|ابتعد)/,
+}
+
+const DOTERRA_LINK = /\[([^\]]+)\]\((https?:\/\/[^)\s]*doterra[^)\s]*)\)/gi
+
+// World-link markets (pt/ja/ar): non hanno link_expert, tutti i link puntano al gateway.
+// Nomi NATIVI di oli GENTILI (mai i forti) usati dal floor per linkificare menzioni già nel testo.
+const WORLD_LINK_SAFE_ANCHORS: Record<string, string[]> = {
+  pt: ['Lavanda', 'Camomila Romana', 'Cedro', 'Vetiver', 'Incenso', 'Laranja Silvestre', 'Bergamota', 'Serenity', 'Balance'],
+  ja: ['ラベンダー', 'ローマンカモミール', 'シダーウッド', 'ベチバー', 'フランキンセンス', 'ワイルドオレンジ', 'ベルガモット', 'Serenity', 'Balance'],
+  ar: ['اللافندر', 'البابونج الروماني', 'خشب الأرز', 'اللبان', 'البرتقال البري', 'البرغموت', 'Serenity', 'Balance'],
+}
+
+/** B3 — un solo link per URL prodotto distinto: i duplicati restano testo. Salta i world-link. */
+function dedupeProductLinks(content: string): string {
+  const seen = new Set<string>()
+  return content.replace(DOTERRA_LINK, (match, anchor: string, url: string) => {
+    const key = url.toLowerCase()
+    if (seen.has(key)) return anchor
+    seen.add(key)
+    return match
+  })
+}
+
+/**
+ * RETE SENTENCE-SCOPED — in una frase (o riga: bullet, cella di tabella) che contiene una
+ * parola-PERICOLO, nessun prodotto doTERRA resta linkato: il link diventa testo semplice.
+ * Chirurgico: non tocca le frasi senza avvertenza, quindi un "On Guard" elencato nel kit di
+ * una guida all'acquisto resta linkato. Linkare ciò che sconsigli = incoerenza.
+ */
+function stripWarningContextLinks(content: string, langCode: string): string {
+  const warn = WARNING_WORDS[langCode]
+  if (!warn) return content
+  return content.split('\n').map((line) => {
+    if (!warn.test(line)) return line
+    // confini di frase dentro la riga (una riga senza punteggiatura = una sola "frase")
+    const spans: Array<[number, number, string]> = []
+    let start = 0
+    const sentRe = /[.!?。؟]+\s*/g
+    let sm: RegExpExecArray | null
+    while ((sm = sentRe.exec(line))) {
+      const end = sm.index + sm[0].length
+      spans.push([start, end, line.slice(start, end)])
+      start = end
+    }
+    if (start < line.length) spans.push([start, line.length, line.slice(start)])
+
+    let out = ''
+    let last = 0
+    const linkRe = new RegExp(DOTERRA_LINK.source, 'gi')
+    let lm: RegExpExecArray | null
+    while ((lm = linkRe.exec(line))) {
+      const idx = lm.index
+      const span = spans.find(([a, b]) => idx >= a && idx < b)
+      const inWarning = span ? warn.test(span[2]) : true
+      out += line.slice(last, idx) + (inWarning ? lm[1] : lm[0])
+      last = idx + lm[0].length
+    }
+    return out + line.slice(last)
+  }).join('\n')
+}
+
+/** RETE FINALE — ogni link doTERRA deve portare l'affiliate id. Gateway → EnrollerID, shop → OwnerID. */
+function ensureAffiliateId(content: string, ownerId?: string): string {
+  if (!ownerId) return content
+  return content.replace(/\((https?:\/\/[^)\s]*doterra[^)\s]*)\)/gi, (full, url: string) => {
+    if (/[?&](OwnerID|EnrollerID)=/i.test(url)) return full
+    const param = /office\.doterra\.com/i.test(url) ? 'EnrollerID' : 'OwnerID'
+    const sep = url.includes('?') ? '&' : '?'
+    return `(${url}${sep}${param}=${ownerId})`
+  })
+}
+
 /**
  * LINK FLOOR — every article must carry at least 2 doTERRA links.
  * If the model produced fewer, linkify plain-text mentions of SAFE products that are
@@ -111,13 +197,27 @@ function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '
  * World-link markets (pt/ja/ar) have no link_expert: their body links already funnel to
  * the gateway via sanitizeProductUrls, so nothing is injected there.
  */
-function ensureDoterraBridge(content: string, linkExpert: LinkExpertEntry[], worldLinkUrl?: string): string {
+function ensureDoterraBridge(content: string, linkExpert: LinkExpertEntry[], worldLinkUrl?: string, langCode?: string): string {
   let out = content
-  if (countDoterraLinks(out) >= 2 || worldLinkUrl) return out
+  if (countDoterraLinks(out) >= 2) return out
 
-  const candidates = linkExpert.filter(
-    (e) => e.anchor_text && e.anchor_text.length >= 3 && !AVOID_AUTOLINK_SLUG.test(e.full_url)
-  )
+  const warn = langCode ? WARNING_WORDS[langCode] : undefined
+  // riga che contiene l'indice → serve per non linkificare dentro una frase di avvertenza
+  const lineAt = (text: string, i: number) => {
+    const s = text.lastIndexOf('\n', i - 1) + 1
+    const e = text.indexOf('\n', i)
+    return text.slice(s, e === -1 ? text.length : e)
+  }
+
+  // world-link (pt/ja/ar): niente link_expert → linkifichiamo nomi nativi di oli GENTILI verso il gateway
+  const candidates: LinkExpertEntry[] = worldLinkUrl
+    ? (WORLD_LINK_SAFE_ANCHORS[langCode ?? ''] ?? []).map((a) => ({ anchor_text: a, full_url: worldLinkUrl }))
+    : linkExpert.filter(
+        (e) => e.anchor_text && e.anchor_text.length >= 3 && !AVOID_AUTOLINK_SLUG.test(e.full_url)
+      )
+
+  // CJK/arabo non hanno word-boundary ASCII: match per sottostringa
+  const noWordBoundary = langCode === 'ja' || langCode === 'ar'
 
   for (const e of candidates) {
     if (countDoterraLinks(out) >= 2) break
@@ -132,14 +232,16 @@ function ensureDoterraBridge(content: string, linkExpert: LinkExpertEntry[], wor
       spans.push([i, i + m[0].length])
     }
 
-    const re = new RegExp(`\\b${escapeRe(anchor)}\\b`, 'i')
+    const re = noWordBoundary ? new RegExp(escapeRe(anchor), 'i') : new RegExp(`\\b${escapeRe(anchor)}\\b`, 'i')
     let idx = -1
     let from = 0
     for (;;) {
       const m = re.exec(out.slice(from))
       if (!m) break
       const abs = from + m.index
-      if (!spans.some(([s, t]) => abs >= s && abs < t)) { idx = abs; break }
+      const insideLink = spans.some(([s, t]) => abs >= s && abs < t)
+      const inWarning = warn ? warn.test(lineAt(out, abs)) : false
+      if (!insideLink && !inWarning) { idx = abs; break }
       from = abs + m[0].length
     }
     if (idx < 0) continue
@@ -264,7 +366,7 @@ This blog is read by PARENTS of babies, toddlers and children, and by mothers (i
 - NEVER give numeric TOPICAL dosages or skin-dilution amounts for children, babies or pregnant/breastfeeding women: no drop counts, ratios or percentages for anything applied to the body or added to a bath (FORBIDDEN: "1 drop on the skin", "1 drop to the bath", "2%", "1:10", "X drops per ml of carrier oil"). Skin/bath dilution may ONLY be described qualitatively: "always dilute generously with a carrier oil", "use sparingly", "far more diluted than for an adult". Topical numbers are the pediatrician's job, never yours.
   * EXCEPTION — ambient DIFFUSER drop counts ARE allowed (the oil is not applied to the child), e.g. "2-3 drops in the diffuser". Keep them small and framed as "less than for an adult". This exception applies ONLY to diffusing, NEVER to skin, bath or ingestion.
 - NEVER claim an oil treats, cures, heals, prevents, relieves or manages ANY condition, symptom, illness or developmental issue in a child (no colic, teething, reflux, fever, cough, cold, ear infection, eczema, ADHD, autism, anxiety, etc.). This is a medical claim about a minor and is absolutely forbidden.
-- NEVER suggest use on NEWBORNS or INFANTS, and NEVER state a specific age in numbers as a fact of your own: FORBIDDEN to write "under 6 years", "over 2 years old", "from 3 months", "under six months", "menores de 6 años", "a partir de los 2 años", "poniżej szóstego miesiąca", "sotto i sei mesi" or any self-authored age threshold, minimum or cutoff. This holds EVEN when the number is meant as a CAUTION or warning (e.g. "especially babies under 6 months"): still do NOT attach a specific month/year figure. Refer to the youngest group only in WORDS, never a number: "newborns and infants", "the very young", "babies and young children", "los más pequeños", "die ganz Kleinen", "de allerkleinsten", "cei mai mici", "najmłodsze dzieci". Age guidance is doTERRA's and the pediatrician's job: always defer to "doTERRA's official age guidance on the product label" and "your pediatrician", never a number you chose. A wrong number is a real risk.
+- NEVER suggest use on NEWBORNS or INFANTS, and NEVER state a specific age in numbers as a fact of your own: FORBIDDEN to write "under 6 years", "over 2 years old", "from 3 months", "under six months", "menores de 6 años", "a partir de los 2 años", "poniżej szóstego miesiąca", "sotto i sei mesi", "sub șase luni", "unter 6 Monaten", "onder de 6 maanden", 「生後6ヶ月未満」「3歳から」「2歳以上」, «أقل من 6 أشهر»، «من سن سنتين» or any self-authored age threshold, minimum or cutoff IN ANY SCRIPT (latin, kana/kanji or arabic numerals). This holds EVEN when the number is meant as a CAUTION or warning (e.g. "especially babies under 6 months"): still do NOT attach a specific month/year figure. Refer to the youngest group only in WORDS, never a number: "newborns and infants", "the very young", "babies and young children", "los más pequeños", "die ganz Kleinen", "de allerkleinsten", "cei mai mici", "najmłodsze dzieci". Age guidance is doTERRA's and the pediatrician's job: always defer to "doTERRA's official age guidance on the product label" and "your pediatrician", never a number you chose. A wrong number is a real risk.
 - NEVER describe any oil as "safe for babies", "gentle enough for newborns", "100% safe", "harmless" or "no side effects" for children.
 - NAMED HIGH-RISK OILS, NEVER present these as suitable or safe for children:
   * "HOT" / irritant oils (Cinnamon, Clove, Oregano, Thyme): NEVER on a child's skin.
@@ -291,6 +393,11 @@ This blog is read by PARENTS of babies, toddlers and children, and by mothers (i
     ? `═══ LINK EXPERT — USE THESE LINKS WHEN MENTIONING PRODUCTS ═══
 You MUST use the following pre-verified affiliate links when mentioning these products.
 NEVER invent your own URLs. If a product is not listed below, use the FALLBACK URL.
+
+HOW TO READ THIS TABLE: the LEFT column is the product's ENGLISH reference name — it is for MATCHING ONLY
+and is NOT the anchor text. When you link a product, the VISIBLE anchor text MUST be that product's NATIVE
+name in ${brand.language_name}; copy the URL on the RIGHT verbatim (it already carries the correct OwnerID).
+Do not skip a product just because its reference name is in English — translate the name, keep the URL.
 
 ${linkExpert.map(l => `${l.anchor_text} → ${l.full_url}`).join('\n')}
 
@@ -335,7 +442,8 @@ ${brand.brand_dna_brand_voice}
 6. CONVERSATIONAL TONE. Write like answering a friend's question — use "you"/"we" and contractions, avoid corporate jargon.
 7. AUTHOR ATTRIBUTION (mandatory). Immediately after the H1 title, on its own line, output this EXACT italic author line:
 *${authorLine}*
-8. CONCISENESS (IMPORTANT). Warm does NOT mean long-winded. Moms read in a hurry, so make every sentence earn its place. Stay WITHIN the word-count target in the user prompt and do NOT exceed it, a tight warm 1000-word article beats a rambling 1400-word one. Cut filler, keep the heart.
+8. DEPTH & LENGTH DISCIPLINE. Write a complete, authoritative guide that lands INSIDE the word-count range given in the user prompt. Treat the upper bound as a HARD CAP — never exceed it. Depth comes from specificity and useful detail, never from padding or extra length. Warm does NOT mean long-winded: moms read in a hurry, so make every sentence earn its place.
+9. THE FAQ SECTION IS NON-NEGOTIABLE. Every article ends with a real FAQ section under its own heading, written in ${brand.language_name}. If you are running out of room, delete a body paragraph, NEVER the FAQ. An article without an FAQ heading is a failed article.
 ═══════════════════════════════════════════════════════${jpCompliance}${arCompliance}${ptRegister}${productMechanism}${universalDoterraRules}${childrenSafety}`
 }
 
@@ -348,7 +456,11 @@ const LENGTH_CONFIG = {
 // Cron-safe word ceiling per language (Hobby 60s cap). Verbose/slow languages get a tighter target
 // so generation stays text-safe under 60s. Latin new markets = 550-650; RTL/CJK world-link = 450-550.
 const LANG_LENGTH_OVERRIDE: Record<string, string> = {
-  // Tightened after prod timing (RO 550-650 → 867w/58s, too close to the 60s cap; no text backfill).
+  // DeepSeek v4-pro IGNORA il target parole: misurato 2026-07-10 su prod.
+  //   target 700-850 (nessun override) → 1078-1362 parole, 45-60s → it KILLED, fr 58s
+  //   target 450-550 (override)        → 617-933 parole,  36-52s → margine sano
+  // Quindi override su TUTTE le 11. Il cap 60s non ha backfill del testo: un timeout perde l'articolo.
+  en: '450-550', es: '450-550', fr: '450-550', it: '450-550', pt: '450-550',
   de: '450-550', nl: '450-550', ro: '450-550', pl: '450-550',
   ar: '450-550', ja: '450-550',
 }
@@ -368,7 +480,7 @@ REQUIRED STRUCTURE (follow exactly):
 2. Author attribution line in italics immediately under the H1 — use the EXACT line given in the GEO rules of the system prompt
 3. Introduction that OPENS with ONE varied hook (a relatable scenario, a real question, a surprising fact, or a concrete everyday moment, DIFFERENT for every article), THEN gives the direct 100-150 word answer to the topic (AI-Overview friendly), then leads into the article
 4. ${cfg.sections} H2 sections with focused content — include AT LEAST 1 markdown comparison table and AT LEAST 1 numbered step-by-step list
-5. FAQ section with ${cfg.faqs} questions and answers (use the appropriate FAQ heading in ${brand.language_name})
+5. FAQ section with ${cfg.faqs} questions and answers — MANDATORY, never omit it, even when you are close to the word cap (cut a body paragraph instead). It MUST start with a real FAQ heading in ${brand.language_name} (e.g. "Häufig gestellte Fragen", "Perguntas Frequentes", "Domande Frequenti", "أسئلة شائعة", "よくある質問"), followed by the questions.
 6. Brief conclusion in ${brand.language_name} — 2-3 sentences MAX, no CTA, no links, no promotional phrases
 7. Horizontal rule (---)
 8. STOP. Do NOT write anything after the horizontal rule. The footer is injected automatically by the system — if you write it yourself it will appear TWICE. Your article ends at ---.
@@ -427,7 +539,11 @@ function parseArticleResponse(text: string) {
 
 export async function POST(req: NextRequest) {
   try {
-    const { brand_id, keyword, length = 'medium', draft = false, status: requestStatus } = await req.json()
+    // test_model: override provider/modello per i gate di collaudo (non usato dal cron)
+    const { brand_id, keyword, length = 'medium', draft = false, status: requestStatus, test_model } = (await req.json()) as {
+      brand_id?: string; keyword?: string; length?: string; draft?: boolean; status?: string
+      test_model?: { apiKey?: string; baseURL?: string; model?: string; thinking?: { type: string } }
+    }
     const isDraft = draft === true || requestStatus === 'draft'
 
     if (!brand_id) {
@@ -498,17 +614,40 @@ export async function POST(req: NextRequest) {
       }
     } catch { /* non-blocking — internal linking failure never stops publish */ }
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+    // PROVIDER SWITCH — DeepSeek è il default quando DEEPSEEK_API_KEY è presente (API Anthropic-compatibile).
+    // 🚨 KILL-SWITCH: MAI rimuovere DEEPSEEK_API_KEY (Anthropic è a zero crediti).
+    //    Piano B = DEEPSEEK_MODEL=deepseek-v4-flash (declassa il modello, non il provider).
+    const deepseekDefault = !test_model && !!process.env.DEEPSEEK_API_KEY
+    const client = new Anthropic(
+      test_model?.apiKey
+        ? { apiKey: test_model.apiKey, baseURL: test_model.baseURL }
+        : deepseekDefault
+          ? { apiKey: process.env.DEEPSEEK_API_KEY, baseURL: 'https://api.deepseek.com/anthropic' }
+          : { apiKey: process.env.ANTHROPIC_API_KEY }
+    )
+    const modelId: string = test_model?.model
+      ?? (deepseekDefault ? (process.env.DEEPSEEK_MODEL || 'deepseek-v4-flash') : 'claude-sonnet-4-5')
+
+    // prompt caching è una feature Anthropic nativa: non inviarla a DeepSeek
+    const anthropicNative = !test_model && !deepseekDefault
+    const systemText = buildSystemPrompt(brand as Brand, linkExpert, worldLinkUrl)
+    const systemBlock = anthropicNative
+      ? [{ type: 'text', text: systemText, cache_control: { type: 'ephemeral' } }]
+      : [{ type: 'text', text: systemText }]
+    const thinkingConfig = test_model?.thinking ?? (deepseekDefault ? { type: 'disabled' } : undefined)
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const message = await (client.messages.create as any)({
-      model: 'claude-sonnet-4-5',
+      model: modelId,
       max_tokens: 8000,
-      system: [{ type: 'text', text: buildSystemPrompt(brand as Brand, linkExpert, worldLinkUrl), cache_control: { type: 'ephemeral' } }],
+      system: systemBlock,
       messages: [{ role: 'user', content: buildUserPrompt(brand as Brand, finalKeyword, length as 'short' | 'medium' | 'long') + internalLinkHint }],
+      ...(thinkingConfig ? { thinking: thinkingConfig } : {}),
     })
 
-    const responseText = message.content[0].type === 'text' ? message.content[0].text : ''
+    // i reasoning model mettono un blocco 'thinking' PRIMA del testo → content[0] non è il testo
+    const responseText: string =
+      (message.content.find((b: { type: string; text?: string }) => b.type === 'text')?.text) ?? ''
     const parsed = parseArticleResponse(responseText)
 
     if (!parsed.title || !parsed.content_markdown) {
@@ -534,7 +673,10 @@ export async function POST(req: NextRequest) {
     let finalContent = parsed.content_markdown
     finalContent = sanitizeProductUrls(finalContent, brand as Brand, verifiedSlugs, worldLinkUrl)
     finalContent = stripEmDashes(finalContent)
-    finalContent = ensureDoterraBridge(finalContent, linkExpert, worldLinkUrl) // floor: >= 2 doTERRA links, safe oils only
+    if (!worldLinkUrl) finalContent = dedupeProductLinks(finalContent)                       // B3: 1 link per prodotto distinto
+    finalContent = stripWarningContextLinks(finalContent, brand.language_code)               // rete: mai linkare ciò che sconsigli
+    finalContent = ensureDoterraBridge(finalContent, linkExpert, worldLinkUrl, brand.language_code) // floor >= 2
+    finalContent = ensureAffiliateId(finalContent, brand.owner_id)                           // rete finale: OwnerID/EnrollerID
     parsed.title = stripDashLine(parsed.title)
     parsed.meta_description = stripDashLine(parsed.meta_description)
 
@@ -594,7 +736,7 @@ export async function POST(req: NextRequest) {
     void supabase.from('cost_log').insert([{
       brand_id,
       article_id: article.id,
-      model: 'claude-sonnet-4-5',
+      model: modelId,
       input_tokens: inputTokens,
       output_tokens: outputTokens,
       cache_read_tokens: cacheReadTokens,

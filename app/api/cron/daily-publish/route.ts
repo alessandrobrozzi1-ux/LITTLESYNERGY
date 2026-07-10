@@ -61,7 +61,7 @@ async function pickThemeKeyword(
 
 // ─── Main keyword selector ────────────────────────────────────────────────────
 
-async function getKeywordForBrand(
+export async function getKeywordForBrand(
   supabase: ReturnType<typeof createAdminClient>,
   brandId: string,
   languageCode: string
@@ -187,8 +187,15 @@ async function run() {
     ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
     : 'http://localhost:3000'
 
-  const results = await Promise.allSettled(
-    brands.map(async (brand) => {
+  // CONCORRENZA — MISURATA su DeepSeek + Vercel Hobby (11 lingue, 2026-07-10):
+  //   parallelo 11 → 0 kill, wall 54s  → sta SOTTO il cap 60s dell'orchestratore ✅
+  //   pool 3       → 0 kill, wall 150s → l'orchestratore MUORE a 60s: solo ~4 lingue partono ❌
+  // Su Hobby ogni /api/generate-article è una funzione a sé (60s suoi): il parallelo è corretto.
+  // L'env è la valvola: abbassare SOLO se il provider inizia a killare. catchup-publish = rete.
+  const CONCURRENCY = Math.max(1, Number(process.env.PUBLISH_CONCURRENCY ?? 11))
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const publishBrand = async (brand: any) => {
       // Guard: skip if already published an article today for this brand
       const todayStart = new Date(); todayStart.setUTCHours(0,0,0,0)
       const { count } = await supabase
@@ -243,8 +250,20 @@ async function run() {
       } catch { /* image failure doesn't block publish */ }
 
       return { brand: brand.brand_name, articleId: data.article.id, keyword, source }
-    })
-  )
+  }
+
+  // worker pool: al più CONCURRENCY generazioni in volo insieme
+  const queue = [...brands]
+  const results: PromiseSettledResult<unknown>[] = []
+  const worker = async () => {
+    for (;;) {
+      const brand = queue.shift()
+      if (!brand) return
+      try { results.push({ status: 'fulfilled', value: await publishBrand(brand) } as PromiseFulfilledResult<unknown>) }
+      catch (e) { results.push({ status: 'rejected', reason: e } as PromiseRejectedResult) }
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(CONCURRENCY, brands.length) }, worker))
 
   const succeeded = results.filter((r) => r.status === 'fulfilled').map((r) => (r as PromiseFulfilledResult<unknown>).value)
   const failed = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason?.message)

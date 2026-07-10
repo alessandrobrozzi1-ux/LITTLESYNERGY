@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk'
+import { llmText } from './llm'
 
 export interface ScoredKeyword {
   keyword: string
@@ -48,17 +48,14 @@ export function hasNicheModifier(keyword: string, languageCode: string): boolean
 }
 
 export async function scoredKeywords(languageCode: string, usedKeywords: Set<string>, nicheContext?: string): Promise<ScoredKeyword[]> {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const niche = nicheContext ?? NICHE_CONTEXT[languageCode] ?? NICHE_CONTEXT_DEFAULT
   const langLabel = languageCode
   const usedList = Array.from(usedKeywords).slice(0, 20).join(', ')
 
-  const message = await client.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 1024,
-    messages: [{
-      role: 'user',
-      content: `You are an SEO keyword research expert for a doTERRA essential oils affiliate blog targeting speakers of language code "${langLabel}".
+  const text = await llmText({
+    size: 'small',
+    maxTokens: 1024,
+    user: `You are an SEO keyword research expert for a doTERRA essential oils affiliate blog targeting speakers of language code "${langLabel}".
 
 Niche context: ${niche}
 
@@ -77,10 +74,8 @@ CRITICAL NICHE RULE (mandatory): EVERY keyword MUST be in the context of CHILDRE
 
 Return ONLY valid JSON array, no explanation:
 [{"keyword":"...","volume":"medium","difficulty":"easy","relevance":9}, ...]`,
-    }],
   })
 
-  const text = message.content[0].type === 'text' ? message.content[0].text : '[]'
   const match = text.match(/\[[\s\S]*\]/)
   if (!match) return []
 

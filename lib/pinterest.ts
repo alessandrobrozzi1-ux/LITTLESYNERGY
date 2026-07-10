@@ -3,7 +3,7 @@
  * Pinterest API v5. Token SEMPRE da process.env.PINTEREST_ACCESS_TOKEN (mai hardcoded).
  * Isolato dal resto del sistema: ogni errore Pinterest viene loggato, mai propagato.
  */
-import Anthropic from '@anthropic-ai/sdk'
+import { llmText } from './llm'
 import type { SupabaseClient } from '@supabase/supabase-js'
 
 const PINTEREST_API = 'https://api.pinterest.com/v5'
@@ -116,7 +116,6 @@ interface ArticleForPin {
 }
 
 export async function generatePinContent(article: ArticleForPin, languageName: string): Promise<PinContent> {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const system = `You are a Pinterest content strategist. Create pin content from a blog article that maximizes Pinterest SEO and engagement. Write in ${languageName}.
 
 Title (100 chars MAX): hook + benefit + keyword, Title Case, no "The"/"A" at start. Example: "7 Essential Oils for Better Sleep Tonight".
@@ -131,14 +130,7 @@ Keyword: ${article.keyword_source ?? ''}
 Meta: ${article.meta_description ?? ''}
 Excerpt: ${(article.content_markdown ?? '').replace(/[#*_>[\]()]/g, ' ').slice(0, 600)}`
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const message = await (client.messages.create as any)({
-    model: 'claude-sonnet-4-5',
-    max_tokens: 600,
-    system,
-    messages: [{ role: 'user', content: user }],
-  })
-  const text = message.content?.[0]?.type === 'text' ? message.content[0].text : ''
+  const text = await llmText({ size: 'small', maxTokens: 600, system, user })
   const jsonMatch = text.match(/\{[\s\S]*\}/)
   if (!jsonMatch) throw new Error('pin content: no JSON in response')
   const parsed = JSON.parse(jsonMatch[0]) as PinContent

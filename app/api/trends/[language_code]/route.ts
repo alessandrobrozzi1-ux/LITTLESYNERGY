@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { llmText } from '@/lib/llm'
 
 const COUNTRY_MAP: Record<string, string> = {
   es: 'ES',
@@ -47,25 +47,18 @@ async function fetchFromPytrends(languageCode: string): Promise<string[] | null>
 }
 
 async function fetchFromClaude(languageCode: string): Promise<string[]> {
-  const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
   const language = LANGUAGE_MAP[languageCode] ?? languageCode
 
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-5',
-    max_tokens: 512,
-    messages: [
-      {
-        role: 'user',
-        content: `Give me 10 trending search keywords in ${language} for the wellness and essential oils niche.
+  const text = await llmText({
+    size: 'small',
+    maxTokens: 512,
+    user: `Give me 10 trending search keywords in ${language} for the wellness and essential oils niche.
 Focus on topics people are actively searching right now: natural remedies, aromatherapy, doTERRA, essential oil uses, health benefits.
 Return ONLY a JSON array of strings, no explanation. Example: ["keyword 1", "keyword 2", ...]`,
-      },
-    ],
   })
 
-  const text = message.content[0].type === 'text' ? message.content[0].text : ''
   const match = text.match(/\[[\s\S]*?\]/)
-  if (!match) throw new Error('Claude did not return valid JSON array')
+  if (!match) throw new Error('LLM did not return valid JSON array')
 
   return JSON.parse(match[0]) as string[]
 }
