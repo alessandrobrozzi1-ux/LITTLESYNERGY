@@ -168,7 +168,7 @@ Tutti in `universalDoterraRules` (sempre attivo):
 - **REGOLA 25% = sconto** sul catalogo (membro vs pubblico), MAI «a vita/forever/permanente/para siempre».
 - **MECCANISMO ACQUISTO LIBERO:** registrazione gratis (~5 min, email + qualsiasi prodotto nel carrello), nessun kit obbligatorio; membership = piccola quota annuale gratis sopra 150 PV; kit = opzione consigliata, MAI obbligo.
 - **NOMI PRODOTTO NATIVI:** anche se la keyword è in inglese, nel titolo/corpo usa il nome nativo (ES: Lavanda, Incienso, Manzanilla Romana…). Eccezioni inglesi: «Tea Tree» + blend (On Guard, Deep Blue, Serenity, Balance).
-- **STILE:** mai em/en-dash (—, –), spaziato « — » O attaccato «word—word» (vedi §2.9, c'è anche il post-processore `stripEmDashes`). Titoli: **MAI due punti «X: Y»** (tell da AI), regola assoluta non legata alla lunghezza. Apertura = gancio variato, non fotocopia (§2.9).
+- **STILE:** mai em/en-dash (—, –), spaziato « — » O attaccato «word—word» (vedi §2.9, c'è anche il post-processore `stripEmDashes`). Titoli: **MAI due punti «X: Y»** (tell da AI, il modello lo ignora ~13.5%) → **PATCH G deterministica** `stripTitleColon` su title + ramo H1 di `stripEmDashes`: `:` → «, » · `：` ideografico JA → «、» (comma ideografica, NON latina) · pulizia virgola in coda; corpo e meta intatti. Retro: `scripts/retro-strip-title-colon.mjs`. Apertura = gancio variato, non fotocopia (§2.9).
 
 ---
 
