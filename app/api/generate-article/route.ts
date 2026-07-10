@@ -91,6 +91,63 @@ function stripDashLine(s: string): string {
 
 interface LinkExpertEntry { anchor_text: string; full_url: string }
 
+// Oils that must NEVER carry an affiliate link on a kids blog (mirrors the
+// "NO AFFILIATE LINK ON AVOID-LIST OILS" rule in childrenSafety). Linking ≠ endorsing:
+// an oil we warn about is named in plain text, never linked, not even via the fallback.
+const AVOID_LINK_SLUG = /(peppermint|eucalyptus|rosemary|wintergreen|cinnamon|clove|oregano|thyme)/i
+
+function countDoterraLinks(md: string): number {
+  return (md.match(/\[[^\]]+\]\(https?:\/\/[^)]*doterra[^)]*\)/gi) ?? []).length
+}
+function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
+
+/**
+ * LINK FLOOR — every article must carry at least 2 doTERRA links.
+ * If the model produced fewer, linkify plain-text mentions of SAFE products that are
+ * already in the body. Never invents sentences, never links an avoid-list oil, never
+ * touches text already inside a markdown link.
+ * World-link markets (pt/ja/ar) have no link_expert: their body links already funnel to
+ * the gateway via sanitizeProductUrls, so nothing is injected there.
+ */
+function ensureDoterraBridge(content: string, linkExpert: LinkExpertEntry[], worldLinkUrl?: string): string {
+  let out = content
+  if (countDoterraLinks(out) >= 2 || worldLinkUrl) return out
+
+  const candidates = linkExpert.filter(
+    (e) => e.anchor_text && e.anchor_text.length >= 3 && !AVOID_LINK_SLUG.test(e.full_url)
+  )
+
+  for (const e of candidates) {
+    if (countDoterraLinks(out) >= 2) break
+    const anchor = e.anchor_text
+    // already linked somewhere in the body → don't duplicate
+    if (new RegExp(`\\[[^\\]]*${escapeRe(anchor)}[^\\]]*\\]\\(`, 'i').test(out)) continue
+
+    // spans of existing markdown links — a match inside one must be skipped
+    const spans: Array<[number, number]> = []
+    for (const m of out.matchAll(/\[[^\]]*\]\([^)]*\)/g)) {
+      const i = m.index ?? 0
+      spans.push([i, i + m[0].length])
+    }
+
+    const re = new RegExp(`\\b${escapeRe(anchor)}\\b`, 'i')
+    let idx = -1
+    let from = 0
+    for (;;) {
+      const m = re.exec(out.slice(from))
+      if (!m) break
+      const abs = from + m.index
+      if (!spans.some(([s, t]) => abs >= s && abs < t)) { idx = abs; break }
+      from = abs + m[0].length
+    }
+    if (idx < 0) continue
+
+    const matched = out.slice(idx, idx + anchor.length)
+    out = `${out.slice(0, idx)}[${matched}](${e.full_url})${out.slice(idx + anchor.length)}`
+  }
+  return out
+}
+
 // GEO v3.1 — localized author attribution line (E-E-A-T signal, rendered in italics right after H1)
 const AUTHOR_LINES: Record<string, string> = {
   en: 'By the LittleSynergy Team — moms, Wellness Advocates & doTERRA enthusiasts',
@@ -315,7 +372,9 @@ CRITICAL: Do NOT add any call-to-action, footer, purchase links, or contact prom
 
 LINK RULES:
 - Use ONLY the pre-verified links from the LINK EXPERT block in the system prompt
-- For any product NOT in the Link Expert list, use the FALLBACK URL from the system prompt
+- LINK FLOOR (mandatory): include AT LEAST 2 doTERRA product links in the body, 2-3 is ideal. NEVER zero, NEVER only one. Place them naturally where you recommend a specific oil, not bunched together.
+- ANCHOR TEXT = the NATIVE product name in the article's language (Lavanda / Lavendel / Lawenda…), NEVER the English name and never a bare URL.
+- For any product NOT in the Link Expert list, use the FALLBACK URL from the system prompt — with ONE EXCEPTION: an oil you are WARNING AGAINST (any oil in an avoid / "not for young children" / caution list, see CHILDREN & BABIES SAFETY) is NEVER linked, not even to the FALLBACK. Name it as PLAIN TEXT. Linking is endorsing.
 - Never link to third parties
 
 TITLE REQUIREMENTS (HARD CONSTRAINT):
@@ -470,6 +529,7 @@ export async function POST(req: NextRequest) {
     let finalContent = parsed.content_markdown
     finalContent = sanitizeProductUrls(finalContent, brand as Brand, verifiedSlugs, worldLinkUrl)
     finalContent = stripEmDashes(finalContent)
+    finalContent = ensureDoterraBridge(finalContent, linkExpert, worldLinkUrl) // floor: >= 2 doTERRA links, safe oils only
     parsed.title = stripDashLine(parsed.title)
     parsed.meta_description = stripDashLine(parsed.meta_description)
 
