@@ -73,15 +73,30 @@ function sanitizeProductUrls(
 // Extended anti-em-dash law (deterministic post-processing): strip spaced AND attached em/en-dashes
 // (—, –) from the article body, EXCEPT the byline (the italic author line, which legitimately uses " — ").
 // Byline detection: an italic line (starts with "*") that names the brand. Covers EN + ES bylines.
+// PATCH G — the "X: Y" subtitle pattern is the single biggest AI tell; the model ignores the
+// "no colon" rule ~14% of the time. Deterministic fix on the TITLE ONLY:
+//   ":" (latin)  → ", "   ·   "：" (ideographic, JA) → "、" (ideographic comma, NOT a latin one)
+// then tidy a trailing comma. Applies to the H1 line and the title/meta fields, never the body.
+function stripTitleColon(s: string): string {
+  return s
+    .replace(/：/g, '、')                  // JA ideographic colon → JA ideographic comma
+    .replace(/\s*:\s*/g, ', ')             // latin colon → comma+space
+    .replace(/[,、]\s*$/g, '')             // no dangling comma at the end
+    .replace(/、\s+/g, '、')               // JA comma takes no following space
+    .trim()
+}
+
 function stripEmDashes(content: string): string {
   return content.split('\n').map((line) => {
     const t = line.trim()
     if (t.startsWith('*') && /LittleSynergy/i.test(line)) return line // byline: leave intact
-    return line
+    const cleaned = line
       .replace(/\s*[—–]\s*/g, ', ')      // "a — b" and "a—b" → "a, b"
       .replace(/ ,/g, ',')
       .replace(/,\s*,/g, ',')
       .replace(/,\s*([.!?;:])/g, '$1')
+    // H1 title line (# ...): also strip the colon subtitle pattern
+    return /^#\s+/.test(t) ? cleaned.replace(/^(#\s+)([\s\S]*)$/, (_m, h, rest) => h + stripTitleColon(rest)) : cleaned
   }).join('\n')
 }
 // Plain strip for single-line fields (title, meta) — no byline present there.
@@ -677,7 +692,7 @@ export async function POST(req: NextRequest) {
     finalContent = stripWarningContextLinks(finalContent, brand.language_code)               // rete: mai linkare ciò che sconsigli
     finalContent = ensureDoterraBridge(finalContent, linkExpert, worldLinkUrl, brand.language_code) // floor >= 2
     finalContent = ensureAffiliateId(finalContent, brand.owner_id)                           // rete finale: OwnerID/EnrollerID
-    parsed.title = stripDashLine(parsed.title)
+    parsed.title = stripTitleColon(stripDashLine(parsed.title)) // PATCH G: no colon subtitle in the title
     parsed.meta_description = stripDashLine(parsed.meta_description)
 
     // Featured image + SEO score (parallel)
