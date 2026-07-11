@@ -3,11 +3,12 @@
 // Mirrors entries in scripts/lib/doterra-markets.js where productPattern === null.
 // Keyed by brand language_code. Add future world-link markets here.
 //
-// LittleSynergy: EN/ES/FR/IT are PRODUCT-link markets (shops carry OwnerID 15958005),
-// so they are intentionally NOT here — body links stay as real product URLs.
-// PT (Portugal) is WORLD-LINK: no dedicated shop, monetized via the worldwide enrollment gateway.
+// LittleSynergy: EN/ES/FR/IT/DE/NL/RO/PL AND PT are PRODUCT-link markets (shops carry
+// OwnerID 15958005), so they are intentionally NOT here — body links stay as real product URLs.
+// Only JA/AR are world-link (fragile slugs that don't carry our OwnerID).
 export const WORLD_LINK_GATEWAYS: Record<string, string> = {
-  pt: 'https://office.doterra.com/Application/index.cfm?Country=PRT&EnrollerID=15958005',
+  // PT = Portogallo è un mercato SHOP vero (shop.doterra.com/PT/pt_PT, verificato 200):
+  // NON è più world-link. Restano world-link solo ja/ar (slug fragili / no OwnerID).
   ja: 'https://office.doterra.com/Application/index.cfm?Country=JPN&EnrollerID=15958005',
   // AR keeps doTERRA's verbatim "?&" quirk in the gateway URL (mirrors doterra-markets.js).
   ar: 'https://office.doterra.com/Application/index.cfm?&Country=ARE&EnrollerID=15958005',

@@ -337,7 +337,7 @@ This blog targets PORTUGAL. Write in EUROPEAN Portuguese (pt_PT), NEVER Brazilia
     : ''
 
   // v3.12 — doTERRA purchase mechanism (product-pattern markets with buying pillars: it/nl/pl/fr). Additive, gated.
-  const productMechanism = ['it', 'nl', 'pl', 'fr', 'en', 'de', 'ro'].includes(brand.language_code)
+  const productMechanism = ['it', 'nl', 'pl', 'fr', 'en', 'de', 'ro', 'pt'].includes(brand.language_code)
     ? `
 
 ═══ doTERRA PURCHASE MECHANISM (mandatory for this market) ═══
