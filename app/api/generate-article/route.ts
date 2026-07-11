@@ -99,6 +99,22 @@ function stripEmDashes(content: string): string {
     return /^#\s+/.test(t) ? cleaned.replace(/^(#\s+)([\s\S]*)$/, (_m, h, rest) => h + stripTitleColon(rest)) : cleaned
   }).join('\n')
 }
+// Quirk DeepSeek (trovato da Creator-Garden): a volte scrive la sezione FAQ come "### FAQ" (H3)
+// invece di "## FAQ" (H2) → i check e lo schema FAQPage non la vedono. Normalizza SOLO la riga
+// del heading di SEZIONE FAQ (frase nativa per lingua, non una domanda) a H2. Le domande interne (###)
+// restano intatte. Idempotente.
+const FAQ_SECTION_HEADING = /^(FAQ|Frequently Asked Questions|Preguntas Frecuentes|Questions Fr[ée]quentes|Domande Frequenti|Perguntas Frequentes|H[äa]ufig(?:e| gestellte) Fragen|Veelgestelde Vragen|[ÎI]ntreb[ăa]ri Frecvente|Najcz[ęe][śs]ciej zadawane pytania|よくある質問|(?:ال)?أسئلة\s*(?:ال)?(?:شائعة|متكررة|متداولة))\s*$/i
+function normalizeFaqHeading(content: string): string {
+  return content.split('\n').map((line) => {
+    const m = line.match(/^(#{3,})\s+(.+?)\s*$/)
+    if (!m) return line
+    const text = m[2]
+    if (/[?？؟]\s*$/.test(text)) return line          // è una domanda, non la sezione
+    if (!FAQ_SECTION_HEADING.test(text)) return line   // non è il heading FAQ
+    return `## ${text}`
+  }).join('\n')
+}
+
 // Plain strip for single-line fields (title, meta) — no byline present there.
 function stripDashLine(s: string): string {
   return s.replace(/\s*[—–]\s*/g, ', ').replace(/,\s*,/g, ',').replace(/,\s*([.!?;:])/g, '$1').trim()
@@ -688,6 +704,7 @@ export async function POST(req: NextRequest) {
     let finalContent = parsed.content_markdown
     finalContent = sanitizeProductUrls(finalContent, brand as Brand, verifiedSlugs, worldLinkUrl)
     finalContent = stripEmDashes(finalContent)
+    finalContent = normalizeFaqHeading(finalContent) // DeepSeek quirk: "### FAQ" → "## FAQ"
     if (!worldLinkUrl) finalContent = dedupeProductLinks(finalContent)                       // B3: 1 link per prodotto distinto
     finalContent = stripWarningContextLinks(finalContent, brand.language_code)               // rete: mai linkare ciò che sconsigli
     finalContent = ensureDoterraBridge(finalContent, linkExpert, worldLinkUrl, brand.language_code) // floor >= 2
