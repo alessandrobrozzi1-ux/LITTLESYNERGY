@@ -30,9 +30,9 @@ triggers:
 - **Dominio pubblico:** https://littlesynergy.com (EN root + ES `/es`)
 - **API backend:** https://littlesynergy.vercel.app
 - **11 brand attivi** (dal 9/7/2026), tutto NATIVO per lingua. OwnerID doTERRA **Davidino = 15958005** (EnrollerID gateway = anch'esso 15958005, incl. ja/ar). Struttura:
-  - **Shop-diretto** (product-link nativi in `link_expert`, 29 link/lingua): EN (US www), ES, FR, IT, **DE, NL, RO, PL** (`shop.doterra.com/{XX}/{xx_XX}/shop/…?OwnerID=15958005`).
-  - **World-link** (solo gateway `office.doterra.com`, 0 shop, in `lib/world-link-markets.ts`): **PT** (Country=PRT), **JA** (Country=JPN), **AR** (Country=`?&ARE` verbatim, RTL).
-  - Footer-gateway per lingua in `lib/footer-gateways.ts` (USA/ESP/DEU/NLD/ROU/POL + PRT/JPN/ARE, EnrollerID Davidino).
+  - **Shop-diretto** (product-link nativi in `link_expert`): EN (US www), ES, FR, IT, DE, NL, RO, PL **e PT** (`shop.doterra.com/{XX}/{xx_XX}/shop/…?OwnerID=15958005`). ⚠️ **PT = Portogallo è SHOP** (shop.doterra.com/PT/pt_PT verificato 200, 37 slug nativi), **NON world-link** (bug corretto 10/7: era erroneamente world-link).
+  - **World-link** (solo gateway `office.doterra.com`, 0 shop, in `lib/world-link-markets.ts`): **SOLO JA** (Country=JPN) e **AR** (Country=`?&ARE` verbatim, RTL). Slug fragili / no OwnerID.
+  - Footer-gateway per lingua in `lib/footer-gateways.ts` (USA/ESP/DEU/NLD/ROU/POL/PRT/JPN/ARE, EnrollerID Davidino). Per PT il footer ha shop CTA + gateway PRT (come gli altri shop).
 - **Nicchia:** oli essenziali per bambini e mamme (NON doTERRA generico). Rischio compliance MASSIMO → vedi §2.
 - **Split account (MAI mischiare):** Vercel + Supabase = **Davidino** (Davidegennari00@gmail.com). GitHub backup = **Alessandro** (`alessandrobrozzi1-ux/LITTLESYNERGY`). OpenAI/Anthropic key = riuso Alessandro (billing suo).
 
@@ -168,7 +168,7 @@ Da 5 a 11 lingue via CP1 (de/nl/ro/pl shop-diretto) + CP2 (ja/ar world-link), a 
 - **3 call-site** (`daily-publish`, `generate-image`, `backfill-images`) passano `NICHE` + `slug` (aggiunto `slug` ai select di generate-image e backfill). **ALT-TEXT** nei 2 endpoint pubblici (`featured_image_alt` dal titolo).
 - Il **cervello BAMBINI (testo)** resta INTATTO: questa patch è SOLO immagini.
 - **Gate:** offline `buildImagePrompt` su 5 topic diversi → 5 prompt DISTINTI (era 1/5), 0 testo spurio, `CHILD-SAFETY`+`OUT OF REACH`+`NO text` ovunque. E2E live: prompt distinti + traduzione ja + alt-text API 11/11.
-- ⚠️ **I 52 published hanno ancora l'immagine vecchia** (prompt identico): il fix vale sui NUOVI. Per rigenerare i vecchi → loop su `backfill` dopo aver messo `featured_image=NULL` (decisione + costo fal, non fatto in automatico).
+- **RIGENERAZIONE fatta (10/7):** `featured_image=NULL` su tutti i published + `node scripts/ops.cjs backfill` in loop → **63 immagini rigenerate topic-varied** (le vecchie erano file distinti ma dallo *stesso* prompt = bottiglia generica), 63 orfane vecchie rimosse. Snapshot filename nello scratchpad prima del NULL. ⚠️ `/tmp` non esiste su Windows: usare lo scratchpad per i file temporanei.
 
 ## §3 — BLOCCHI EREDITATI DA SOLOSEO (universali, tutte le lingue)
 
