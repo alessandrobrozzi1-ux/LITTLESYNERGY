@@ -55,7 +55,7 @@ triggers:
 
 **Stack:** Next.js (backend + dashboard) su Vercel Davidino · Supabase Davidino (Postgres + pgvector + Storage bucket `article-images` public) · frontend blog su **Lovable** (consuma la public API) · Anthropic `claude-sonnet-4-5` (testo) · **fal.ai FLUX.2 turbo** (immagini hero 1792×1024, `lib/hero-image.ts`) · OpenAI (embeddings `text-embedding-3-small`). Vedi §2.10 per la generazione immagini.
 
-**cost_log:** l'insert è `await` (non `void`/fire-and-forget: su Vercel il void perdeva la riga prima del teardown → cost_log vuota). ⚠️ Il `cost_usd` usa ancora le tariffe Sonnet hardcoded: con DeepSeek il $ è indicativo, ma `model`+token sono reali (per i costi veri usare il balance DeepSeek).
+**cost_log:** l'insert è `await` (non `void`/fire-and-forget: su Vercel il void perdeva la riga prima del teardown → cost_log vuota). `cost_usd` usa le **tariffe DeepSeek v4-pro** (`DEEPSEEK_IN_PER_M=0.6`, `DEEPSEEK_OUT_PER_M=3` USD/1M, no termine cache) — le vecchie Sonnet ($3/$15) gonfiavano esatti 5×. Per i costi assoluti veri resta il balance DeepSeek.
 
 **Secret:** MAI nel file/git. Vivono in `.env.local` (gitignored) + env Vercel Production (Encrypted): `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_KEY`, `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, `CRON_SECRET`, **`FAL_KEY`** (account fal.ai UNICO dell'utente, condiviso da tutti i brand dell'impero, costi sul suo billing fal — NON Davidino).
 
