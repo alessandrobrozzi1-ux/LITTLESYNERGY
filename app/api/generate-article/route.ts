@@ -767,7 +767,8 @@ export async function POST(req: NextRequest) {
     const costUsd =
       ((inputTokens - cacheReadTokens) * 3 + cacheReadTokens * 0.3) / 1_000_000 +
       (outputTokens * 15) / 1_000_000
-    void supabase.from('cost_log').insert([{
+    // await (non fire-and-forget): il void perdeva l'insert su Vercel prima del teardown → cost_log vuota
+    const { error: costErr } = await supabase.from('cost_log').insert([{
       brand_id,
       article_id: article.id,
       model: modelId,
@@ -776,6 +777,7 @@ export async function POST(req: NextRequest) {
       cache_read_tokens: cacheReadTokens,
       cost_usd: costUsd,
     }])
+    if (costErr) console.warn(`[generate-article] cost_log insert failed: ${costErr.message}`)
 
     void seoScore // unused intermediate var
     return NextResponse.json({ article, keyword: finalKeyword, word_count: wordCount, seo_score: finalSeoScore, cost_usd: costUsd })

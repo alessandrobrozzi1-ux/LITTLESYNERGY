@@ -42,7 +42,13 @@ const NICHE_MODIFIER: Record<string, RegExp> = {
   ja: /(子ども|子供|こども|赤ちゃん|乳児|新生児|幼児|妊娠|妊婦|授乳|産後|ママ|ベビー|子ども部屋)/,
   ar: /(أطفال|طفل|رضّع|رُضّع|رضيع|رضع|مواليد|حديثي الولادة|الحمل|حامل|الرضاعة|بعد الولادة|أمهات|الأمهات|للأم|الأمومة|صغار)/,
 }
+// Numero SEGUITO da un'unità d'età (qualsiasi lingua). Su un brand bambini una keyword con
+// età esplicita ("aceites para niños de 2 años", "6 meses") trascina il numero nel TITOLO →
+// scartala a monte. NB: richiede numero+unità, quindi "top 5 oli"/"3 aceites" NON matcha.
+const EXPLICIT_AGE = /[\d０-９٠-٩]+\s*-?\s*(a[ñn]os?|meses|mes\b|mois|months?|month\b|Monate?n?|maand(?:en)?|luni|lun[ăa]|miesi[ąa]c\w*|mies\b|anni|anno|anos|ano\b|years?|year\b|Jahre?n?|jaar|lat\b|latek|ani\b|ans\b|an\b|weeks?|semanas?|settiman\w*|ヶ月|か月|ヵ月|歳|才|週|شهر|أشهر|سنة|سنوات|أسبوع)/i
+
 export function hasNicheModifier(keyword: string, languageCode: string): boolean {
+  if (EXPLICIT_AGE.test(keyword)) return false   // età numerica esplicita → scartata (brand bambini)
   const re = NICHE_MODIFIER[languageCode]
   return re ? re.test(keyword) : true
 }
