@@ -103,15 +103,17 @@ function stripEmDashes(content: string): string {
 // invece di "## FAQ" (H2) → i check e lo schema FAQPage non la vedono. Normalizza SOLO la riga
 // del heading di SEZIONE FAQ (frase nativa per lingua, non una domanda) a H2. Le domande interne (###)
 // restano intatte. Idempotente.
-const FAQ_SECTION_HEADING = /^(FAQ|Frequently Asked Questions|Preguntas Frecuentes|Questions Fr[ée]quentes|Domande Frequenti|Perguntas Frequentes|H[äa]ufig(?:e| gestellte) Fragen|Veelgestelde Vragen|[ÎI]ntreb[ăa]ri Frecvente|Najcz[ęe][śs]ciej zadawane pytania|よくある質問|(?:ال)?أسئلة\s*(?:ال)?(?:شائعة|متكررة|متداولة))\s*$/i
+// Frasi-SEZIONE FAQ per lingua (multi-parola = inequivocabili; "contains", non full-match,
+// così cattura varianti come "Foire aux Questions (FAQ)"). Bare "FAQ"/"(FAQ)" gestito a parte.
+const FAQ_SECTION_PHRASE = /(Frequently Asked Questions|Foire aux Questions|Questions Fr[ée]quentes|Preguntas Frecuentes|Domande Frequenti|Perguntas Frequentes|H[äa]ufig(?:e| gestellte) Fragen|Veelgestelde Vragen|[ÎI]ntreb[ăa]ri Frecvente|Najcz[ęe][śs]ciej zadawane pytania|よくある質問|(?:ال)?أسئلة\s*(?:ال)?(?:شائعة|متكررة|متداولة))/i
 function normalizeFaqHeading(content: string): string {
   return content.split('\n').map((line) => {
     const m = line.match(/^(#{3,})\s+(.+?)\s*$/)
     if (!m) return line
     const text = m[2]
-    if (/[?？؟]\s*$/.test(text)) return line          // è una domanda, non la sezione
-    if (!FAQ_SECTION_HEADING.test(text)) return line   // non è il heading FAQ
-    return `## ${text}`
+    if (/[?？؟]\s*$/.test(text)) return line                    // è una domanda, non la sezione
+    const isFaq = FAQ_SECTION_PHRASE.test(text) || /^\(?FAQ\)?$/i.test(text)
+    return isFaq ? `## ${text}` : line
   }).join('\n')
 }
 
