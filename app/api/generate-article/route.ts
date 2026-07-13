@@ -761,12 +761,14 @@ export async function POST(req: NextRequest) {
     }])
 
     // Log cost (no extra API calls — usage already in message.usage)
+    // Tariffe DeepSeek v4-pro (USD per 1M token). Le vecchie Sonnet ($3/$15) gonfiavano ~5×.
+    // DeepSeek non ha il cache-read pricing (prompt caching disabilitato) → nessun termine cache.
+    const DEEPSEEK_IN_PER_M = 0.6
+    const DEEPSEEK_OUT_PER_M = 3
     const inputTokens = message.usage.input_tokens
     const outputTokens = message.usage.output_tokens
     const cacheReadTokens = (message.usage as unknown as Record<string, number>).cache_read_input_tokens ?? 0
-    const costUsd =
-      ((inputTokens - cacheReadTokens) * 3 + cacheReadTokens * 0.3) / 1_000_000 +
-      (outputTokens * 15) / 1_000_000
+    const costUsd = (inputTokens * DEEPSEEK_IN_PER_M + outputTokens * DEEPSEEK_OUT_PER_M) / 1_000_000
     // await (non fire-and-forget): il void perdeva l'insert su Vercel prima del teardown → cost_log vuota
     const { error: costErr } = await supabase.from('cost_log').insert([{
       brand_id,
