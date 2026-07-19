@@ -541,7 +541,7 @@ Output format (use exactly these markers):
 ---TITLE---
 [Your title here — 45-58 characters, absolutely NO colon]
 ---META---
-[Meta description, 150-160 characters]
+[Meta description, 150-160 characters — HARD CAP 160, never exceed, end on a complete word]
 ---SLUG---
 [URL slug: lowercase Latin letters and hyphens only, no accents. If the title is in a non-Latin script (e.g. Arabic), TRANSLITERATE the title's sounds into Latin letters — do NOT translate it to English. Example: "كيفية شراء دوتيرا" → "kayfiyat-shira-doterra"]
 ---CONTENT---
@@ -631,7 +631,9 @@ export async function POST(req: NextRequest) {
     let internalLinkHint = ''
     try {
       const kwEmbedding = await generateEmbedding(finalKeyword)
-      const related = await findRelatedArticles(brand_id, kwEmbedding, undefined, 2, 0.4)
+      // soglia 0.35 (era 0.4): nicchia stretta (tutti oli-bambini), 0.4 lasciava ~44% articoli senza
+      // internal-link. 0.35 aumenta la copertura restando in-topic. Fetch 3, il prompt ne usa 1-2.
+      const related = await findRelatedArticles(brand_id, kwEmbedding, undefined, 3, 0.35)
       if (related.length > 0) {
         const domainBase = 'https://littlesynergy.com'
         // EN: /blog/[slug]  |  every other language: /xx/blog/[slug] (uniform, incl. DE).
@@ -713,6 +715,17 @@ export async function POST(req: NextRequest) {
     finalContent = ensureAffiliateId(finalContent, brand.owner_id)                           // rete finale: OwnerID/EnrollerID
     parsed.title = stripTitleColon(stripDashLine(parsed.title)) // PATCH G: no colon subtitle in the title
     parsed.meta_description = stripDashLine(parsed.meta_description)
+
+    // H1 ENFORCEMENT (quirk DeepSeek: a volte omette la riga "# Titolo" e parte dalla byline → 0 H1 = SEO rotto).
+    // Se il corpo non inizia con un H1, lo anteponiamo dal titolo.
+    if (!/^#\s+/.test(finalContent.replace(/^﻿?\s*/, ''))) {
+      finalContent = `# ${parsed.title}\n\n${finalContent.replace(/^\s+/, '')}`
+    }
+
+    // META CAP (SEO): Google tronca oltre ~160 char. Taglia a confine di parola, no virgola/punto in coda.
+    if (parsed.meta_description && parsed.meta_description.length > 160) {
+      parsed.meta_description = parsed.meta_description.slice(0, 160).replace(/\s+\S*$/, '').replace(/[\s,;:]+$/, '')
+    }
 
     // Featured image + SEO score (parallel)
     const [featuredImage, seoScore] = await Promise.all([
