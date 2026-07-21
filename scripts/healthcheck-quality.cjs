@@ -17,7 +17,7 @@ const FIG_INC = /[0-9][0-9.,]*\s?(€|\$|£|¥|zł|EUR|USD|euros?|dollars?|در�
 const POT = /earning potential|income potential|potenziale di guadagno|potencial de (ingreso|ganho)|potentiel de (gain|revenu)|Einkommenspotenzial|potențial de c[âa]știg|potencjał zarobk|収入の可能性/i
 
 const LANG = {
-  en: { aVita: /\b(lifetime|for life|forever|permanent(ly)?|life-?long)\b/gi, ther: /therapeutic[- ]?(grade|quality|properties|benefits)?/gi, mecc: /(must|have to|need to|required to)\s+(buy|purchase)\s+(a |an )?(starter |enrollment )?kit|kit is (required|mandatory|necessary)|required to (join|become)|(purchase|order)s+musts+bes+(a |an )?(starter |enrol?lment |enrollment )?kit/gi },
+  en: { aVita: /\b(lifetime|for life|forever|permanent(ly)?|life-?long)\b/gi, ther: /therapeutic[- ]?(grade|quality|properties|benefits)?/gi, mecc: /(must|have to|need to|required to)\s+(buy|purchase)\s+(a |an )?(starter |enrollment )?kit|kit is (required|mandatory|necessary)|required to (join|become)|(purchase|order)\s+must\s+be\s+(a |an )?(starter |enrol?lment |enrollment )?kit/gi },
   es: { aVita: /de por vida|para siempre|de forma permanente|\bpermanente\b/gi, ther: /terap[eé]utic[oa]s?/gi, mecc: /(debes|tienes que|hay que|necesitas)\s+comprar\s+(un )?kit|kit\s+(es\s+)?(obligatori|necesari|requerid)/gi },
   de: { aVita: /lebenslang|für immer|auf Lebenszeit|\bdauerhaft\b|\bpermanent\b/gi, ther: /therapeutische?[rsn]?\b/gi, mecc: /Kit\s+(ist\s+)?(erforderlich|verpflichtend|Pflicht|notwendig)|müssen\s+ein\s+Kit\s+kaufen/gi },
   fr: { aVita: /à vie|pour toujours|permanent(e)?|définiti(f|ve)/gi, ther: /th[ée]rapeutiques?/gi, mecc: /(devez|faut)\s+acheter\s+(un )?kit|kit\s+(est\s+)?obligatoire/gi },
