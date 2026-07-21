@@ -122,6 +122,27 @@ function stripDashLine(s: string): string {
   return s.replace(/\s*[—–]\s*/g, ', ').replace(/,\s*,/g, ',').replace(/,\s*([.!?;:])/g, '$1').trim()
 }
 
+// NET (propagata da AromaTouch, gate NL) — link relativi: il modello scrive ](/shop/xxx/?OwnerID=…)
+// SENZA host. Nessuna rete a valle li vede (matchano tutte su doterra.com) e sul frontend sono 404
+// interni. Si assolutizza PRIMA di sanitizeProductUrls, così slug-check/dedupe/OID passano dalle reti.
+function absolutizeRelativeShopLinks(content: string, brand: { affiliate_base_url?: string }, worldLinkUrl?: string): string {
+  if (worldLinkUrl) return content.replace(/\]\(\/(?:shop|p)\/[^)\s]*\)/g, `](${worldLinkUrl})`)
+  const aff = brand.affiliate_base_url ?? ''
+  const shopMatch = aff.match(/^(https:\/\/shop\.doterra\.com\/[^/]+\/[^/]+\/shop)/)
+  if (shopMatch) return content.replace(/\]\(\/shop\//g, `](${shopMatch[1]}/`)
+  const wwwMatch = aff.match(/^(https:\/\/www\.doterra\.com\/[^/]+\/[^/]+)/)
+  if (wwwMatch) return content.replace(/\]\(\/p\//g, `](${wwwMatch[1]}/p/`)
+  return content
+}
+
+// NET (propagata da AromaTouch, gate AR) — cross-script leakage: ideogrammi CJK garbled DENTRO una
+// frase araba. Fuori dal giapponese un CJK/kana non e' MAI legittimo (i nomi doTERRA restano latini).
+function stripForeignCJK(content: string, languageCode: string): string {
+  if (languageCode === 'ja') return content
+  return content.replace(/[\u3040-\u30FF\u3400-\u9FFF\uF900-\uFAFF]+/g, '')
+}
+
+
 interface LinkExpertEntry { anchor_text: string; full_url: string }
 
 // Products the DETERMINISTIC bridge must never AUTO-INJECT a link for on a kids blog.
@@ -706,7 +727,9 @@ export async function POST(req: NextRequest) {
 
     // Post-processing: sanitize any invented URLs, then strip em/en-dashes (byline preserved)
     let finalContent = parsed.content_markdown
+    finalContent = absolutizeRelativeShopLinks(finalContent, brand as Brand, worldLinkUrl)
     finalContent = sanitizeProductUrls(finalContent, brand as Brand, verifiedSlugs, worldLinkUrl)
+    finalContent = stripForeignCJK(finalContent, brand.language_code)
     finalContent = stripEmDashes(finalContent)
     finalContent = normalizeFaqHeading(finalContent) // DeepSeek quirk: "### FAQ" → "## FAQ"
     if (!worldLinkUrl) finalContent = dedupeProductLinks(finalContent)                       // B3: 1 link per prodotto distinto
