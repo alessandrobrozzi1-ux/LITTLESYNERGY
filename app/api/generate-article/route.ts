@@ -143,6 +143,15 @@ function stripForeignCJK(content: string, languageCode: string): string {
 }
 
 
+// NET (30 lug 2026) - doTERRA US ha cambiato formato URL: www.doterra.com ora 404a su "/?" e
+// su trailing "/" (verificato live: /p/x/?OID=404, /p/x?OID=200, vale anche per /shop/). EU shop e
+// office.doterra.com INVARIATI: la regex e' www-scoped. Normalizza qualsiasi cosa scriva il modello.
+function normalizeUsDoterraSlash(content: string): string {
+  return content
+    .replace(/(https:\/\/www\.doterra\.com\/[^\s)"'<>?]*?)\/\?/g, '$1?')
+    .replace(/(https:\/\/www\.doterra\.com\/[^\s)"'<>?]*?)\/(?=[\s)"'<>]|$)/g, '$1')
+}
+
 interface LinkExpertEntry { anchor_text: string; full_url: string }
 
 // Products the DETERMINISTIC bridge must never AUTO-INJECT a link for on a kids blog.
@@ -728,6 +737,7 @@ export async function POST(req: NextRequest) {
     // Post-processing: sanitize any invented URLs, then strip em/en-dashes (byline preserved)
     let finalContent = parsed.content_markdown
     finalContent = absolutizeRelativeShopLinks(finalContent, brand as Brand, worldLinkUrl)
+    finalContent = normalizeUsDoterraSlash(finalContent)
     finalContent = sanitizeProductUrls(finalContent, brand as Brand, verifiedSlugs, worldLinkUrl)
     finalContent = stripForeignCJK(finalContent, brand.language_code)
     finalContent = stripEmDashes(finalContent)
