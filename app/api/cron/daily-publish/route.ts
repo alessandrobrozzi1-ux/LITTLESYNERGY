@@ -4,7 +4,7 @@ import { bestKeywordForToday, hasNicheModifier } from '@/lib/keyword-scorer'
 import { fetchTrendingKeywords } from '@/lib/trends'
 import sharp from 'sharp'
 import { buildImagePrompt, NICHE } from '@/lib/image-prompt'
-import { generateHeroImage } from '@/lib/hero-image'
+import { generateValidatedHeroImage } from '@/lib/hero-image'
 
 export const maxDuration = 300
 
@@ -231,8 +231,8 @@ async function run() {
       // Generate image with fal.ai FLUX.2 [turbo] (same prompt as manual flow)
       try {
         const imgPrompt = await buildImagePrompt(keyword, (brand as Record<string, string>).brand_dna_image_style, NICHE, data.article?.content_markdown ?? undefined, brand.language_code, data.article?.slug)
-        const pngBuffer = await generateHeroImage(imgPrompt)
-        {
+        const pngBuffer = (await generateValidatedHeroImage(imgPrompt)).buffer
+        if (pngBuffer) {
           let outBuffer: Buffer = pngBuffer, ext = 'png', contentType = 'image/png'
           try {
             outBuffer = await sharp(pngBuffer).webp({ quality: 85 }).toBuffer()
