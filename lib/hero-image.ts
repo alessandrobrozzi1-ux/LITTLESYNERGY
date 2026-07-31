@@ -6,17 +6,27 @@
 
 const FAL_MODEL = process.env.FAL_MODEL || 'fal-ai/flux-2/turbo'
 
+// ── Modello PER-LINGUA (31 lug, ordine Alessandro): le lingue in FAL_PREMIUM_LANGS (es. "en,es")
+// usano il modello premium (FAL_MODEL_PREMIUM, default flux-2/turbo — etichette leggibili);
+// tutte le altre il default del brand (FAL_MODEL, tipicamente schnell). undefined = default. ──
+const PREMIUM_LANGS = (process.env.FAL_PREMIUM_LANGS ?? '').split(',').map(s => s.trim()).filter(Boolean)
+export function heroModelForLang(lang?: string): string | undefined {
+  if (lang && PREMIUM_LANGS.includes(lang)) return process.env.FAL_MODEL_PREMIUM ?? 'fal-ai/flux-2/turbo'
+  return undefined
+}
+
 /**
  * Generate one hero image from a prompt and return its raw bytes.
  * @param prompt  image prompt (unchanged from buildImagePrompt)
  * @param width   default 1792 (blog hero); pass 1024 for a vertical Pinterest pin
  * @param height  default 1024 (blog hero); pass 1536 for a vertical Pinterest pin
  */
-export async function generateHeroImage(prompt: string, width = 1792, height = 1024): Promise<Buffer> {
+export async function generateHeroImage(prompt: string, width = 1792, height = 1024, modelOverride?: string): Promise<Buffer> {
   const key = process.env.FAL_KEY
   if (!key) throw new Error('FAL_KEY missing from environment')
+  const model = modelOverride ?? FAL_MODEL
 
-  const res = await fetch(`https://fal.run/${FAL_MODEL}`, {
+  const res = await fetch(`https://fal.run/${model}`, {
     method: 'POST',
     headers: { Authorization: `Key ${key}`, 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -31,7 +41,7 @@ export async function generateHeroImage(prompt: string, width = 1792, height = 1
 
   if (!res.ok) {
     const detail = await res.text().catch(() => '')
-    throw new Error(`fal ${FAL_MODEL} HTTP ${res.status}: ${detail.slice(0, 300)}`)
+    throw new Error(`fal ${model} HTTP ${res.status}: ${detail.slice(0, 300)}`)
   }
 
   const data = (await res.json()) as { images?: Array<{ url?: string }> }
@@ -111,12 +121,13 @@ export interface ValidatedHero {
  * `checker` iniettabile SOLO per i test; default = checkImageSanity. */
 export async function generateValidatedHeroImage(
   prompt: string,
+  modelOverride?: string,
   checker: (img: Buffer) => Promise<SanityVerdict | null> = checkImageSanity,
 ): Promise<ValidatedHero> {
   const out: ValidatedHero = { buffer: null, attempts: 0, checks: 0, verdicts: [], failedSanity: false, visionInputTokens: 0, visionOutputTokens: 0, visionCostUsd: 0 }
   for (let attempt = 1; attempt <= 2; attempt++) {
     out.attempts = attempt
-    const img = await generateHeroImage(attempt === 1 ? prompt : prompt + RETRY_SUFFIX)
+    const img = await generateHeroImage(attempt === 1 ? prompt : prompt + RETRY_SUFFIX, undefined, undefined, modelOverride)
     if (!img) {
       if (attempt === 1) await new Promise(r => setTimeout(r, 3000))
       continue
