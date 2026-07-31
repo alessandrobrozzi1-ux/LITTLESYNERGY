@@ -753,6 +753,8 @@ export async function POST(req: NextRequest) {
     // Se il corpo non inizia con un H1, lo anteponiamo dal titolo.
     if (!/^#\s+/.test(finalContent.replace(/^﻿?\s*/, ''))) {
       finalContent = `# ${parsed.title}\n\n${finalContent.replace(/^\s+/, '')}`
+      // FINAL PASS anti-slash: sanitizeProductUrls ricostruisce /p/${slug}/?OwnerID (slash hardcoded) — la normalizzazione DEVE chiudere la pipeline (lezione 31 lug)
+      finalContent = normalizeUsDoterraSlash(finalContent)
     }
 
     // META CAP (SEO): Google tronca oltre ~160 char. Taglia a confine di parola, no virgola/punto in coda.
