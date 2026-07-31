@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import sharp from 'sharp'
 import { buildImagePrompt, NICHE } from '@/lib/image-prompt'
-import { generateHeroImage } from '@/lib/hero-image'
+import { generateHeroImage, heroModelForLang } from '@/lib/hero-image'
 
 export const maxDuration = 60 // Hobby cap — lavoriamo DENTRO i 60s (~1 img/call)
 
@@ -31,7 +31,7 @@ async function generateOneImage(
   )
   // 1 automatic retry (come generate-image)
   let png: Buffer
-  try { png = await generateHeroImage(prompt) }
+  try { png = await generateHeroImage(prompt, undefined, undefined, heroModelForLang(langCode)) }
   catch { await new Promise(r => setTimeout(r, 3000)); try { png = await generateHeroImage(prompt) } catch { return false } }
   let out: Buffer = png, ext = 'png', ct = 'image/png'
   try { out = await sharp(png).webp({ quality: 85 }).toBuffer(); ext = 'webp'; ct = 'image/webp' } catch { /* fallback PNG */ }
