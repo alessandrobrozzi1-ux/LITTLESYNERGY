@@ -35,7 +35,7 @@ async function run() {
   }
 
   if (!missing.length) {
-    void supabase.from('cron_runs').insert([{ cron_name: 'catchup-publish', status: 'ok', brands_processed: 0, articles_created: 0, duration_ms: Date.now() - t0 }])
+    await supabase.from('cron_runs').insert([{ cron_name: 'catchup-publish', status: 'ok', brands_processed: 0, articles_created: 0, duration_ms: Date.now() - t0 }])
     return { done: 0, remaining: 0, message: 'all brands published today' }
   }
 
@@ -76,7 +76,7 @@ async function run() {
     if ((count ?? 0) === 0) remaining++
   }
 
-  void supabase.from('cron_runs').insert([{
+  await supabase.from('cron_runs').insert([{
     cron_name: 'catchup-publish',
     status: failed.length ? 'partial' : 'ok',
     brands_processed: missing.length,

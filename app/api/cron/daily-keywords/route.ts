@@ -12,7 +12,7 @@ async function run() {
     .eq('active', true)
 
   if (!brands?.length) {
-    void supabase.from('cron_runs').insert([{ cron_name: 'daily-keywords', status: 'ok', brands_processed: 0, articles_created: 0, duration_ms: Date.now() - t0 }])
+    await supabase.from('cron_runs').insert([{ cron_name: 'daily-keywords', status: 'ok', brands_processed: 0, articles_created: 0, duration_ms: Date.now() - t0 }])
     return { message: 'No active brands', processed: 0 }
   }
 
@@ -52,7 +52,7 @@ async function run() {
   const succeeded = results.filter((r) => r.status === 'fulfilled').map((r) => (r as PromiseFulfilledResult<unknown>).value)
   const failed = results.filter((r) => r.status === 'rejected').map((r) => (r as PromiseRejectedResult).reason?.message)
 
-  void supabase.from('cron_runs').insert([{
+  await supabase.from('cron_runs').insert([{
     cron_name: 'daily-keywords',
     status: failed.length > 0 ? 'partial' : 'ok',
     brands_processed: brands.length,

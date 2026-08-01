@@ -62,7 +62,7 @@ async function run() {
       : { lang: jobs[i].lang, slug: jobs[i].a.slug, error: (s.reason as Error)?.message },
   )
 
-  void supabase.from('cron_runs').insert([{
+  await supabase.from('cron_runs').insert([{
     cron_name: 'daily-pin',
     status: 'ok',
     brands_processed: brands?.length ?? 0,

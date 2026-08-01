@@ -71,7 +71,7 @@ async function run() {
     .eq('status', 'published')
     .is('featured_image', null)
 
-  void supabase.from('cron_runs').insert([{ cron_name: 'backfill-images', status: 'ok', articles_created: done, brands_processed: 0, duration_ms: Date.now() - t0 }])
+  await supabase.from('cron_runs').insert([{ cron_name: 'backfill-images', status: 'ok', articles_created: done, brands_processed: 0, duration_ms: Date.now() - t0 }])
   return { done, remaining }
 }
 
