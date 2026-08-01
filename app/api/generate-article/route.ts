@@ -7,6 +7,8 @@ import { getWorldLinkUrl } from '@/lib/world-link-markets'
 import { calculateSeoScore } from '@/lib/seo-score'
 import { generateEmbedding, storeArticleEmbedding, findRelatedArticles } from '@/lib/embeddings'
 import type { Brand } from '@/lib/types'
+import { ensureQualitativePricing } from '@/lib/qualitative-pricing'
+import { ensureHumanProse } from '@/lib/human-prose'
 
 export const maxDuration = 120
 
@@ -756,6 +758,16 @@ export async function POST(req: NextRequest) {
     }
     // FINAL PASS anti-slash: sanitizeProductUrls ricostruisce /p/${slug}/?OwnerID (slash hardcoded) —
     // la normalizzazione DEVE chiudere la pipeline, FUORI da ogni if (lezione 31 lug, doppia)
+    // Human-writing-law net (validata sul pilota, ondata 3): frase-AI bandita → rewrite flash.
+    // Liste en+es; le altre lingue passano invariate (no-op documentato nel modulo).
+    finalContent = await ensureHumanProse(
+      finalContent,
+      brand.language_name,
+      brand.language_code,
+      (AUTHOR_LINES[brand.language_code] ?? AUTHOR_LINES.en).split('—')[0].trim(),
+    )
+    // Qualitative-pricing net (ondata 2): mai prezzi negli articoli — cifre = training data inventato.
+    finalContent = await ensureQualitativePricing(finalContent, brand.language_name)
     finalContent = normalizeUsDoterraSlash(finalContent)
 
     // META CAP (SEO): Google tronca oltre ~160 char. Taglia a confine di parola, no virgola/punto in coda.
