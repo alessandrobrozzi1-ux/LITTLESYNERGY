@@ -33,14 +33,26 @@ const HEADINGS: Record<string, string> = {
 // Stessa mappa della pipeline generate-article (v3.9) — VERIFICATA sul sito vivo 1 ago:
 // /de/{slug} 200, /de/blog/{slug} 404. (publicArticleUrl di lib/indexnow appende sempre /blog → per
 // DE è sbagliata: bug pre-esistente segnalato al capofila, qui NON la usiamo.)
-const DOMAIN_BASE = 'https://essentialsynergybr.com'
+// ⚠️ 17 ago 2026 — il dominio NON va hardcoded. Era `https://essentialsynergybr.com` fisso: copiando
+// il motore sui brand fratelli, tutti i loro link interni sono finiti verso il dominio del Main
+// (percorsi giusti, dominio sbagliato). Fonte di verità = il campo `brands.domain` del brand stesso,
+// che porta già dentro il path della lingua (es. "essentialsynergybr.com/de") — la stessa usata da
+// publicArticleUrl in lib/indexnow. Fallback all'env solo se la colonna fosse vuota.
+const FALLBACK_BASE = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || '')
+  .trim().replace(/\/+$/, '')
 const LANG_PATH_OVERRIDE: Record<string, string> = { ja: 'jp' }
 const LANGS_WITHOUT_BLOG = new Set(['de'])
-export function publicUrl(languageCode: string, slug: string): string {
+
+/** URL pubblico dell'articolo. `brandDomain` = brands.domain (già comprensivo del path lingua). */
+export function publicUrl(languageCode: string, slug: string, brandDomain?: string | null): string {
   const pathLang = LANG_PATH_OVERRIDE[languageCode] ?? languageCode
-  const langPath = pathLang === 'en' ? '' : `/${pathLang}`
   const blogPath = LANGS_WITHOUT_BLOG.has(pathLang) ? '' : '/blog'
-  return `${DOMAIN_BASE}${langPath}${blogPath}/${slug}`
+  if (brandDomain && brandDomain.trim()) {
+    const base = brandDomain.trim().replace(/^https?:\/\//, '').replace(/\/+$/, '')
+    return `https://${base}${blogPath}/${slug}`
+  }
+  const langPath = pathLang === 'en' ? '' : `/${pathLang}`
+  return `${FALLBACK_BASE}${langPath}${blogPath}/${slug}`
 }
 
 const MAX_LINKS = 3
@@ -139,8 +151,10 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
     skipped_no_embedding: 0, skipped_no_related: 0, skipped_block_full: 0,
     warnings: [], touched: [],
   }
-  const { data: brands } = await supabase.from('brands').select('id, language_code')
+  const { data: brands } = await supabase.from('brands').select('id, language_code, domain')
   const langByBrand = new Map((brands ?? []).map(b => [b.id as string, b.language_code as string]))
+  // dominio per brand: è la fonte di verità dell'URL pubblico (vedi publicUrl)
+  const domainByBrand = new Map((brands ?? []).map(b => [b.id as string, (b as { domain?: string | null }).domain ?? null]))
 
   // piano di innesto: oldArticleId → link da aggiungere (aggregato prima di scrivere: 1 update/articolo)
   const plan = new Map<string, WeaveLink[]>()
@@ -173,7 +187,7 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
 
     for (const r of related.slice(0, MAX_LINKS)) {
       if (r.slug === n.slug) continue // mai self-link
-      addToPlan(r.article_id, { anchor: n.title, url: publicUrl(lang, n.slug) })
+      addToPlan(r.article_id, { anchor: n.title, url: publicUrl(lang, n.slug, domainByBrand.get(n.brand_id)) })
     }
   })
 
@@ -199,7 +213,7 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
       const anchor = String(r.query).charAt(0).toUpperCase() + String(r.query).slice(1)
       for (const rel of related.slice(0, MAX_LINKS)) {
         if (rel.slug === target.slug) continue
-        addToPlan(rel.article_id, { anchor, url: publicUrl(r.language_code, target.slug) })
+        addToPlan(rel.article_id, { anchor, url: publicUrl(r.language_code, target.slug, domainByBrand.get(r.brand_id)) })
       }
       if (!opts.dry) {
         await supabase.from('sniper_reinforce').update({ status: 'consumed', consumed_at: new Date().toISOString() }).eq('id', r.id)
@@ -223,7 +237,7 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
     if (!lang) return
 
     const existing = parseExistingWeave(oldArt.content_markdown)
-    const selfUrl = publicUrl(lang, oldArt.slug)
+    const selfUrl = publicUrl(lang, oldArt.slug, domainByBrand.get(oldArt.brand_id))
     const merged: WeaveLink[] = [...existing]
     const added: string[] = []
     for (const l of newLinks) {
