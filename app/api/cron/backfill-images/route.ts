@@ -3,6 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 import sharp from 'sharp'
 import { buildImagePrompt, NICHE } from '@/lib/image-prompt'
 import { generateHeroImage, heroModelForLang } from '@/lib/hero-image'
+import { runWeave } from '@/lib/weave-links'
 
 export const maxDuration = 60 // Hobby cap — lavoriamo DENTRO i 60s (~1 img/call)
 
@@ -75,14 +76,38 @@ async function run() {
   return { done, remaining }
 }
 
+
+/**
+ * 🕸️ MAGLIA INTERNA agganciata a questo cron (17 ago 2026). Gli articoli nuovi restano ORFANI
+ * finché qualcuno non li linka, ed è la causa numero uno delle pagine "unknown to Google"
+ * (misurato con l'URL Inspection API su tutto l'impero). Questo cron gira già ogni giorno su OGNI
+ * brand: agganciandola qui la maglia si mantiene da sola, senza dipendere da pg_cron o
+ * cron-job.org (dashboard sparse su account diversi, ognuno con la sua sessione).
+ * Finestra 7 giorni = pochi innesti per volta; idempotente (i marker sostituiscono il blocco, mai
+ * accumulano). Sempre in try/catch e DOPO il lavoro sulle immagini: se fallisce o rallenta, le
+ * immagini sono già salvate. ⚠️ Deve stare fuori da run(): quella esce presto quando non ci sono
+ * immagini da generare — che è il caso normale — e la maglia non partirebbe mai.
+ */
+async function runWithWeave() {
+  const images = await run()
+  let weave: Record<string, unknown> = {}
+  try {
+    const r = await runWeave(createAdminClient(), { dry: false, windowDays: 7 })
+    weave = { links_grafted: r.links_grafted, old_touched: r.old_touched }
+  } catch (e) {
+    weave = { error: e instanceof Error ? e.message.slice(0, 120) : 'weave failed' }
+  }
+  return { ...images, weave }
+}
+
 // 🔒 GATED da CRON_SECRET (come daily-publish / daily-keywords)
 export async function GET(req: NextRequest) {
   if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  return NextResponse.json(await run())
+  return NextResponse.json(await runWithWeave())
 }
 export async function POST(req: NextRequest) {
   if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  return NextResponse.json(await run())
+  return NextResponse.json(await runWithWeave())
 }
