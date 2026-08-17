@@ -1,0 +1,9 @@
+# 🚨 Obbligatorio col metodo ".git-hide": senza .git, Vercel NON usa .gitignore,
+# quindi senza questo file i secret finirebbero nel source del deployment.
+.env*
+.git
+.vercel
+.next
+node_modules
+*.tsbuildinfo
+docs
