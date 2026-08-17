@@ -91,6 +91,11 @@ export async function getKeywordForBrand(
     .limit(60)
   const allHistory = histRows ?? []
   const usedSet = new Set(allHistory.map((r: { keyword: string }) => r.keyword.toLowerCase()))
+  // 🔒 Confronto normalizzato (17 ago 2026): storico e candidata si confrontano in forma NFC + trim +
+  // spazi singoli, altrimenti le lingue con diacritici (pl/ro/nl/de…) sfuggono al dedup — la stessa
+  // parola scritta in forma decomposta NON matcha quella in forma composta.
+  const norm = (s: string) => s.normalize('NFC').toLowerCase().trim().replace(/\s+/g, ' ')
+  const usedNorm = new Set(allHistory.map((r: { keyword: string }) => norm(r.keyword)))
 
   // Last 7 keywords for similarity check
   const last7 = allHistory.slice(0, 7).map((r: { keyword: string }) => r.keyword)
@@ -105,6 +110,9 @@ export async function getKeywordForBrand(
   }
 
   function isAllowed(kw: string): boolean {
+
+
+    if (usedNorm.has(norm(kw))) return false                                 // doppione (normalizzato)
     if (!hasNicheModifier(kw, languageCode)) return false                    // L3 guard: solo keyword nicchia bambini/mamme
     if (usedSet.has(kw.toLowerCase())) return false                          // exact duplicate
     if (last7.some(prev => jaccard(kw, prev) > 0.6)) return false           // >60% similar
@@ -161,8 +169,13 @@ export async function getKeywordForBrand(
     .eq('status', 'pending')
     .order('score', { ascending: false })
     .limit(10)
-    .single()
-  if (pending) return { keyword: pending.keyword, keywordId: pending.id, source: 'pending' }
+  // ⚠️ 17 ago 2026: qui c'era .limit(10).single(), che per PostgREST è un errore quando le righe sono
+  // più di una (406) → data null → il ramo non pescava MAI e si cadeva sempre sul fallback AI.
+  // Ora si scorrono le candidate e si prende la prima ammessa; se nessuna passa si usa la migliore.
+  if (pending?.length) {
+    const fresh = pending.find((k: { keyword: string }) => isAllowed(k.keyword)) ?? pending[0]
+    return { keyword: fresh.keyword, keywordId: fresh.id, source: 'pending' }
+  }
 
   // ── 6. AI fallback ──────────────────────────────────────────────────────────
   const keyword = await bestKeywordForToday(languageCode, usedSet)
