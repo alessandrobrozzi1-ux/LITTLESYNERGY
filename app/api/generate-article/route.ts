@@ -735,6 +735,19 @@ export async function POST(req: NextRequest) {
     if (soroSlugs.has(safeSlug)) {
       safeSlug = `${safeSlug}-${brand.language_code}`
     }
+    // 🔒 Anti-collisione REALE (16 ago 2026). Il check qui sopra legge la SITEMAP: cache 1h, solo
+    // URL che contengono /blog/ e suffisso applicato UNA volta sola. Risultato osservato sul Main:
+    // stessa keyword ripescata 5 giorni di fila → 5 articoli con slug identico → il frontend fa
+    // .single() su N righe e la pagina va in 404 (alert GSC "Not found"). Trovati 3 casi anche su Tail.
+    // Fonte di verità = il DB, e si cicla finché lo slug non è davvero libero.
+    {
+      const baseSlug = safeSlug
+      for (let i = 2; i <= 20; i++) {
+        const { data: clash } = await supabase.from('articles').select('id').eq('slug', safeSlug).limit(1)
+        if (!clash?.length) break
+        safeSlug = `${baseSlug}-${i}`
+      }
+    }
 
     // Post-processing: sanitize any invented URLs, then strip em/en-dashes (byline preserved)
     let finalContent = parsed.content_markdown
