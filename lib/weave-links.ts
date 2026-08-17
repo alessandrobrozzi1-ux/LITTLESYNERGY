@@ -41,7 +41,9 @@ const HEADINGS: Record<string, string> = {
 const FALLBACK_BASE = (process.env.NEXT_PUBLIC_SITE_URL || process.env.SITE_URL || '')
   .trim().replace(/\/+$/, '')
 const LANG_PATH_OVERRIDE: Record<string, string> = { ja: 'jp' }
-const LANGS_WITHOUT_BLOG = new Set(['de'])
+// 🚨 17 ago 2026 — allineato al sito VIVO (verificato: /de/blog/{slug} 200, /de/{slug} 404).
+// La costante ['de'] era ereditata dal Main, dove è giusta; qui produceva 404 nel weave.
+const LANGS_WITHOUT_BLOG = new Set<string>([])
 
 /** URL pubblico dell'articolo. `brandDomain` = brands.domain (già comprensivo del path lingua). */
 export function publicUrl(languageCode: string, slug: string, brandDomain?: string | null): string {
