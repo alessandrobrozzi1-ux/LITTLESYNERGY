@@ -163,8 +163,13 @@ interface LinkExpertEntry { anchor_text: string; full_url: string }
 // floor-filler conservative: it never picks a strong oil, or a blend built on one, on its own.
 const AVOID_AUTOLINK_SLUG = /(peppermint|eucalyptus|rosemary|wintergreen|cinnamon|clove|oregano|thyme|deep-blue|doterra-air|zengest|onguard)/i
 
+// ⚠️ 17 ago 2026 — tutte le regex qui sotto cercavano "doterra" in un punto qualsiasi dell'URL, e
+// quindi trattavano come link doTERRA anche i link INTERNI il cui slug contiene la parola
+// (/blog/come-comprare-doterra). Due danni: il pavimento dei link affiliati poteva dirsi soddisfatto
+// senza un solo link al negozio, e ensureAffiliateId appiccicava ?OwnerID a un URL di casa nostra
+// (8 articoli su 470). L'ancora giusta è l'HOST, doterra.com, non la parola.
 function countDoterraLinks(md: string): number {
-  return (md.match(/\[[^\]]+\]\(https?:\/\/[^)]*doterra[^)]*\)/gi) ?? []).length
+  return (md.match(/\[[^\]]+\]\(https?:\/\/[^)]*doterra\.com[^)]*\)/gi) ?? []).length
 }
 function escapeRe(s: string): string { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') }
 
@@ -184,7 +189,7 @@ const WARNING_WORDS: Record<string, RegExp> = {
   ar: /(تجنّب|تجنب|لا تستخدم|غير مناسب|احذر|تحذير|ابتعد)/,
 }
 
-const DOTERRA_LINK = /\[([^\]]+)\]\((https?:\/\/[^)\s]*doterra[^)\s]*)\)/gi
+const DOTERRA_LINK = /\[([^\]]+)\]\((https?:\/\/[^)\s]*doterra\.com[^)\s]*)\)/gi
 
 // World-link markets (pt/ja/ar): non hanno link_expert, tutti i link puntano al gateway.
 // Nomi NATIVI di oli GENTILI (mai i forti) usati dal floor per linkificare menzioni già nel testo.
@@ -246,7 +251,7 @@ function stripWarningContextLinks(content: string, langCode: string): string {
 /** RETE FINALE — ogni link doTERRA deve portare l'affiliate id. Gateway → EnrollerID, shop → OwnerID. */
 function ensureAffiliateId(content: string, ownerId?: string): string {
   if (!ownerId) return content
-  return content.replace(/\((https?:\/\/[^)\s]*doterra[^)\s]*)\)/gi, (full, url: string) => {
+  return content.replace(/\((https?:\/\/[^)\s]*doterra\.com[^)\s]*)\)/gi, (full, url: string) => {
     if (/[?&](OwnerID|EnrollerID)=/i.test(url)) return full
     const param = /office\.doterra\.com/i.test(url) ? 'EnrollerID' : 'OwnerID'
     const sep = url.includes('?') ? '&' : '?'
