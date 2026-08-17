@@ -92,16 +92,28 @@ Return ONLY valid JSON array, no explanation:
     relevance: number
   }>
 
-  const volumeScore = { low: 10, medium: 30, high: 50 }
-  const difficultyScore = { easy: 30, medium: 15, hard: 0 }
+  const volumeScore: Record<string, number> = { low: 10, medium: 30, high: 50 }
+  const difficultyScore: Record<string, number> = { easy: 30, medium: 15, hard: 0 }
+
+  // ⚠️ 17 ago 2026 — il cron daily-keywords falliva con "null value in column score". Causa: il
+  // modello a volte scrive volume/difficulty fuori dall'elenco (in lingua, o "very high"), la
+  // ricerca dà undefined, la somma diventa NaN, e NaN in JSON diventa null → l'insert viola il
+  // NOT NULL e si perde l'intera infornata di keyword di quella lingua. Ogni campo che arriva da
+  // un modello va trattato come testo libero, mai come valore garantito.
+  const bucket = (t: Record<string, number>, v: unknown, fallback: number) =>
+    t[String(v ?? '').trim().toLowerCase()] ?? fallback
 
   return raw
     .filter((k) => k.keyword && !usedKeywords.has(k.keyword.toLowerCase()))
     .filter((k) => hasNicheModifier(k.keyword, languageCode))  // L3 guard: scarta keyword senza modificatore nicchia
-    .map((k) => ({
-      ...k,
-      score: (k.relevance * 2) + volumeScore[k.volume] + difficultyScore[k.difficulty],
-    }))
+    .map((k) => {
+      const rel = Number(k.relevance)
+      const score =
+        (Number.isFinite(rel) ? Math.min(Math.max(rel, 0), 10) : 5) * 2 +
+        bucket(volumeScore, k.volume, 10) +
+        bucket(difficultyScore, k.difficulty, 15)
+      return { ...k, score: Number.isFinite(score) ? score : 45 }
+    })
     .sort((a, b) => b.score - a.score)
 }
 
