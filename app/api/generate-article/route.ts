@@ -6,6 +6,8 @@ import { fetchFeaturedImage } from '@/lib/unsplash'
 import { getWorldLinkUrl } from '@/lib/world-link-markets'
 import { calculateSeoScore } from '@/lib/seo-score'
 import { generateEmbedding, storeArticleEmbedding, findRelatedArticles } from '@/lib/embeddings'
+import { pingIndexNow } from '@/lib/indexnow'
+import { publicUrl } from '@/lib/weave-links'
 import type { Brand } from '@/lib/types'
 import { ensureQualitativePricing } from '@/lib/qualitative-pricing'
 import { ensureHumanProse } from '@/lib/human-prose'
@@ -821,6 +823,13 @@ export async function POST(req: NextRequest) {
 
     if (articleError || !article) {
       return NextResponse.json({ error: `DB save failed: ${articleError?.message}` }, { status: 500 })
+    }
+
+    // IndexNow: avvisa i motori appena l'articolo e' pubblicato (mai sui draft).
+    // Awaited con timeout corto, NON fire-and-forget: Vercel congela la lambda alla risposta
+    // e un ping non atteso verrebbe perso. URL da publicUrl (verita' per-brand, vedi lib/indexnow).
+    if (!isDraft) {
+      await pingIndexNow(publicUrl(brand.language_code, safeSlug, (brand as { domain?: string | null }).domain))
     }
 
     // Store embedding for new article (fire-and-forget — used by future articles for internal linking)
