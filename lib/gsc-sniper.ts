@@ -116,7 +116,16 @@ export async function runSniper(
   const minImpr = opts.minImpressions ?? MIN_IMPRESSIONS
   const posMin = opts.posMin ?? POS_MIN
   const posMax = opts.posMax ?? POS_MAX
-  const match = opts.siteMatch ?? ['essentialsynergybr']
+  // 🚨 19 ago 2026 — il dominio NON va hardcoded: il default era ['essentialsynergybr'] (il Main),
+  // quindi ogni brand copiato leggeva le query GSC del Main e si sarebbe iniettato keyword altrui.
+  // Fonte di verita' = brands.domain di QUESTO backend. Stessa lezione gia' pagata sul weave.
+  let match = opts.siteMatch
+  if (!match) {
+    const { data: brs } = await supabase.from('brands').select('domain').not('domain', 'is', null).limit(20)
+    const hosts = [...new Set((brs ?? []).map((b: { domain?: string | null }) => String(b.domain ?? '').replace('https://', '').replace('http://', '').split('/')[0].trim()).filter(Boolean))]
+    if (!hosts.length) throw new Error('sniper: nessun brands.domain configurato, impossibile scegliere il sito GSC')
+    match = hosts
+  }
 
   // 1. proprietà GSC del pilota
   const sitesRes = await gsc.request<{ siteEntry?: { siteUrl: string; permissionLevel: string }[] }>({
