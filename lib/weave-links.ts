@@ -121,6 +121,7 @@ export type WeaveReport = {
   skipped_no_embedding: number
   skipped_no_related: number
   skipped_block_full: number
+  reinforce_consumed: number
   warnings: string[]
   touched: { slug: string; language_code: string; added: string[] }[]
 }
@@ -150,7 +151,7 @@ function parseEmbedding(raw: unknown): number[] | null {
 export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { dry: boolean; windowDays?: number }): Promise<WeaveReport> {
   const report: WeaveReport = {
     new_articles: 0, reinforce_rows: 0, old_touched: 0, links_grafted: 0,
-    skipped_no_embedding: 0, skipped_no_related: 0, skipped_block_full: 0,
+    skipped_no_embedding: 0, skipped_no_related: 0, skipped_block_full: 0, reinforce_consumed: 0,
     warnings: [], touched: [],
   }
   const { data: brands } = await supabase.from('brands').select('id, language_code, domain')
@@ -165,6 +166,13 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
     if (!arr.some(l => l.url === link.url)) arr.push(link)
     plan.set(oldId, arr)
   }
+
+  // Operazione Cecchino: un rinforzo si chiude SOLO se un link atterra davvero nel contenuto.
+  // Marcarlo 'consumed' subito bruciava il bersaglio anche col blocco pieno (links_grafted: 0).
+  const linkKey = (l: WeaveLink) => `${l.url}
+${l.anchor}`
+  const reinforceByLink = new Map<string, string>()  // chiave link -> id riga sniper_reinforce
+  const landed = new Set<string>()                   // chiavi dei link scritti per davvero
 
   // ── 1. articoli pubblicati nella finestra (default 7 giorni, vedi windowDays) ──
   const cutoff = new Date(Date.now() - (opts.windowDays ?? 7) * 864e5).toISOString()
@@ -215,11 +223,11 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
       const anchor = String(r.query).charAt(0).toUpperCase() + String(r.query).slice(1)
       for (const rel of related.slice(0, MAX_LINKS)) {
         if (rel.slug === target.slug) continue
-        addToPlan(rel.article_id, { anchor, url: publicUrl(r.language_code, target.slug, domainByBrand.get(r.brand_id)) })
+        const link: WeaveLink = { anchor, url: publicUrl(r.language_code, target.slug, domainByBrand.get(r.brand_id)) }
+        reinforceByLink.set(linkKey(link), String(r.id))
+        addToPlan(rel.article_id, link)
       }
-      if (!opts.dry) {
-        await supabase.from('sniper_reinforce').update({ status: 'consumed', consumed_at: new Date().toISOString() }).eq('id', r.id)
-      }
+      // NB: niente 'consumed' qui - si chiude in fondo, solo se il link e' stato innestato davvero.
     }
   } catch (e) {
     report.warnings.push(`sniper_reinforce non disponibile (DDL non ancora girato?): ${e instanceof Error ? e.message : String(e)}`)
@@ -242,12 +250,14 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
     const selfUrl = publicUrl(lang, oldArt.slug, domainByBrand.get(oldArt.brand_id))
     const merged: WeaveLink[] = [...existing]
     const added: string[] = []
+    const addedLinks: WeaveLink[] = []
     for (const l of newLinks) {
       if (l.url === selfUrl) continue // mai self-link
       if (merged.some(m => m.url === l.url)) continue
       if (merged.length >= MAX_LINKS) { report.skipped_block_full++; continue }
       merged.push(l)
       added.push(l.anchor)
+      addedLinks.push(l)
     }
     if (!added.length) return
     if (budget-- <= 0) { report.warnings.push('tetto update/run raggiunto: la prossima chiamata converge sul resto'); return }
@@ -257,10 +267,24 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
       const { error } = await supabase.from('articles').update({ content_markdown: updated }).eq('id', oldId)
       if (error) { report.warnings.push(`update ${oldArt.slug}: ${error.message}`); return }
     }
+    for (const l of addedLinks) landed.add(linkKey(l))
     report.old_touched++
     report.links_grafted += added.length
     report.touched.push({ slug: oldArt.slug, language_code: lang, added })
   })
+
+  // -- 4. Cecchino: chiudi SOLO i rinforzi che hanno prodotto un link vero --
+  const consumedIds = new Set<string>()
+  for (const [key, rowId] of reinforceByLink) if (landed.has(key)) consumedIds.add(rowId)
+  const stuck = [...new Set(reinforceByLink.values())].filter(id => !consumedIds.has(id))
+  report.reinforce_consumed = consumedIds.size
+  if (consumedIds.size && !opts.dry) {
+    const { error } = await supabase.from('sniper_reinforce')
+      .update({ status: 'consumed', consumed_at: new Date().toISOString() })
+      .in('id', [...consumedIds])
+    if (error) report.warnings.push(`sniper_reinforce update: ${error.message}`)
+  }
+  if (stuck.length) report.warnings.push(`${stuck.length} rinforzo/i senza link innestato (blocco pieno): restano pending, la prossima run ritenta`)
 
   return report
 }

@@ -93,7 +93,7 @@ function stripEmDashes(content: string): string {
     const t = line.trim()
     if (t.startsWith('*') && /LittleSynergy/i.test(line)) return line // byline: leave intact
     const cleaned = line
-      .replace(/\s*[—–]\s*/g, ', ')      // "a — b" and "a—b" → "a, b"
+      .replace(/\s*[—]\s*/g, ', ')      // "a — b" and "a—b" → "a, b"
       .replace(/ ,/g, ',')
       .replace(/,\s*,/g, ',')
       .replace(/,\s*([.!?;:])/g, '$1')
@@ -121,7 +121,7 @@ function normalizeFaqHeading(content: string): string {
 
 // Plain strip for single-line fields (title, meta) — no byline present there.
 function stripDashLine(s: string): string {
-  return s.replace(/\s*[—–]\s*/g, ', ').replace(/,\s*,/g, ',').replace(/,\s*([.!?;:])/g, '$1').trim()
+  return s.replace(/\s*[—]\s*/g, ', ').replace(/,\s*,/g, ',').replace(/,\s*([.!?;:])/g, '$1').trim()
 }
 
 // NET (propagata da AromaTouch, gate NL) — link relativi: il modello scrive ](/shop/xxx/?OwnerID=…)
