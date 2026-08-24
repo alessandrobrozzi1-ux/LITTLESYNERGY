@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getKeywordForBrand } from '../daily-publish/route'
 
-export const maxDuration = 60 // Hobby cap — restiamo DENTRO i 60s
+export const maxDuration = 300 // budget pieno: una sola chiamata deve poter recuperare l'intera giornata
 
 async function run() {
   const t0 = Date.now()
@@ -46,7 +46,7 @@ async function run() {
   let done = 0
   const failed: string[] = []
   for (const brand of missing) {
-    if (Date.now() - t0 > 45000) break // guard: una generazione richiede ~45-55s, non iniziarne un'altra
+    if (Date.now() - t0 > 240000) break // guard: una generazione richiede ~45-55s, non iniziarne un'altra
     try {
       const { keyword, keywordId } = await getKeywordForBrand(supabase, brand.id, brand.language_code)
       const res = await fetch(`${baseUrl}/api/generate-article`, {
@@ -61,7 +61,11 @@ async function run() {
     } catch (e) {
       failed.push(`${brand.language_code}: ${(e as Error).message}`)
     }
-    break // una generazione per chiamata: resta sotto i 60s. Il pinger richiama finché remaining=0.
+    // 24 ago 2026: qui c'era un break secco, una generazione per chiamata. Quel giorno il cron
+    // daily-publish di Vercel non e partito affatto (sui piani Hobby i cron sono best-effort e
+    // possono essere saltati senza lasciare traccia) e la rete, riparando un buco per volta, ha
+    // rimesso in piedi 4 lingue su 11 prima che la finestra dei ping finisse. Ora il ciclo va
+    // avanti finche il budget lo consente: una sola chiamata puo recuperare l'intera giornata.
   }
 
   // ricalcola quanti mancano ancora
