@@ -23,17 +23,25 @@ export function calculateSeoScore(
   keyword: string,
   hasFeaturedImage: boolean
 ): SeoScore {
-  const wordCount = content.split(/\s+/).filter(Boolean).length
+  // Word count: languages without inter-word spaces (Japanese/Chinese) can't be counted by splitting
+  // on whitespace — that collapses a full article to a handful of "words" and tanks the score. For CJK,
+  // approximate words as characters/2 (typical char→word ratio). Latin/Arabic use spaces normally.
+  const cjkChars = (content.match(/[぀-ヿ一-鿿㐀-䶿]/g) ?? []).length
+  const spaceWords = content.split(/\s+/).filter(Boolean).length
+  const wordCount = cjkChars > spaceWords ? Math.round(cjkChars / 2) + spaceWords : spaceWords
   const headings = (content.match(/^#{1,3} .+/gm) ?? []).length
   const links = (content.match(/\[([^\]]+)\]\(([^)]+)\)/g) ?? []).length
   const metaLen = metaDescription.length
   const titleLen = title.length
   const hasKeywordInTitle = title.toLowerCase().includes(keyword.toLowerCase().split(' ')[0])
-  const hasFaq = /^##\s+(FAQ|Frequently Asked Questions|Preguntas Frecuentes|Häufige Fragen|Foire aux Questions|Domande Frequenti)/im.test(content)
-    || /^\*\*[A-ZÀ-Ÿ][^*\n]{10,200}\?\*\*\s*$/m.test(content)
+  // 25 ago 2026: il rilevamento FAQ pretendeva una MAIUSCOLA LATINA a inizio domanda: le FAQ
+  // giapponesi (**子供がいる部屋で…？**) e arabe non venivano mai viste (+5 punti persi a priori).
+  const hasFaq = /^##\s+(FAQ|Frequently Asked Questions|Preguntas Frecuentes|Häufige Fragen|Foire aux Questions|Domande Frequenti|Perguntas Frequentes|Veelgestelde vragen|Întrebări frecvente|Najczęściej zadawane pytania|よくある質問|الأسئلة الشائعة)/im.test(content)
+    || /^\*\*[^*\n]{6,200}[?？؟]\*\*\s*$/m.test(content)
 
-  // Readability: avg sentence length heuristic
-  const sentences = content.split(/[.!?]+/).filter((s) => s.trim().length > 10)
+  // Readability: avg sentence length heuristic. Include CJK/full-width terminators (。！？) and Arabic
+  // full-stop (۔) so non-Latin scripts split into real sentences instead of one giant block.
+  const sentences = content.split(/[.!?。！？۔]+/).filter((s) => s.trim().length > 10)
   const avgWords = sentences.length > 0
     ? sentences.reduce((sum, s) => sum + s.split(/\s+/).length, 0) / sentences.length
     : 20
