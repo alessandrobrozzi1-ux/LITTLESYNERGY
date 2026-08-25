@@ -758,6 +758,10 @@ export async function POST(req: NextRequest) {
 
     // Post-processing: sanitize any invented URLs, then strip em/en-dashes (byline preserved)
     let finalContent = parsed.content_markdown
+    // 25 ago 2026: il frontend rende gia il suo h1 dal titolo — il "# Titolo" nel markdown ne
+    // creava un SECONDO identico su ogni pagina (h1 doppio misurato su 10 brand su 12). Il
+    // titolo vive nella colonna title: dal corpo si toglie alla nascita.
+    finalContent = finalContent.replace(/^#\s+[^\n]*\r?\n+/, '')
     finalContent = absolutizeRelativeShopLinks(finalContent, brand as Brand, worldLinkUrl)
     finalContent = normalizeUsDoterraSlash(finalContent)
     finalContent = sanitizeProductUrls(finalContent, brand as Brand, verifiedSlugs, worldLinkUrl)
