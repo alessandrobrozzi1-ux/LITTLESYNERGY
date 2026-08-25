@@ -285,7 +285,10 @@ async function run() {
     cron_name: 'daily-publish',
     status: failed.length > 0 ? 'partial' : 'ok',
     brands_processed: brands.length,
-    articles_created: succeeded.length,
+    // 25 ago 2026: succeeded.length contava anche gli skip ("gia pubblicato oggi") come articoli
+    // creati: su aromatouch il cron gira piu volte al giorno e ogni giro dichiarava 11 creati con
+    // 0 creazioni vere — la dashboard sommava fantasmi. Uno skipped-oggi non e un articolo creato.
+    articles_created: succeeded.filter(v => !(v && typeof v === 'object' && (v as { skipped?: boolean }).skipped)).length,
     errors: failed.length > 0 ? failed : null,
     duration_ms: Date.now() - t0,
   }])
