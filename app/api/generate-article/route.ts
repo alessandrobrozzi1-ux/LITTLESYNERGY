@@ -16,6 +16,35 @@ export const maxDuration = 120
 
 // ─── Existing-slug cache (1h TTL) — prevents slug collisions with existing articles ─
 let _soroCache: { slugs: Set<string>; at: number } | null = null
+
+// 25 ago 2026 — rete disclaimer di nicchia (pediatrico: qui OGNI articolo parla di oli con neonati e bambini, quindi il footer va sempre).
+// Il Main la aveva per i temi salute; questo clone era nato SENZA (misurato: 0-3% degli
+// ultimi 40 articoli col footer). Iniezione incondizionata, idempotente.
+const NICHE_DISCLAIMERS: Record<string, string> = {
+  en: "This content is for general information only and is not medical advice. Essential oils are not intended to diagnose, treat, cure, or prevent any disease; always consult a pediatrician before any use involving babies or children.",
+  es: "Este contenido es solo informativo y no constituye consejo médico. Los aceites esenciales no están destinados a diagnosticar, tratar, curar ni prevenir ninguna enfermedad; consulta siempre al pediatra antes de cualquier uso con bebés o niños.",
+  de: "Dieser Inhalt dient nur der allgemeinen Information und ist keine medizinische Beratung. Ätherische Öle sind nicht dazu bestimmt, Krankheiten zu diagnostizieren, zu behandeln, zu heilen oder zu verhüten; konsultiere vor jeder Anwendung bei Babys oder Kindern immer eine Kinderärztin oder einen Kinderarzt.",
+  fr: "Ce contenu est fourni à titre informatif et ne constitue pas un avis médical. Les huiles essentielles ne sont pas destinées à diagnostiquer, traiter, guérir ou prévenir une maladie ; consultez toujours un pédiatre avant toute utilisation impliquant des bébés ou des enfants.",
+  pt: "Este conteúdo é apenas informativo e não constitui aconselhamento médico. Os óleos essenciais não se destinam a diagnosticar, tratar, curar ou prevenir qualquer doença; consulte sempre um pediatra antes de qualquer uso com bebés ou crianças.",
+  it: "Questo contenuto ha scopo puramente informativo e non costituisce un consiglio medico. Gli oli essenziali non sono destinati a diagnosticare, trattare, curare o prevenire alcuna malattia; consulta sempre il pediatra prima di qualsiasi utilizzo con neonati o bambini.",
+  nl: "Deze inhoud is uitsluitend informatief en vormt geen medisch advies. Etherische oliën zijn niet bedoeld om ziekten te diagnosticeren, te behandelen, te genezen of te voorkomen; raadpleeg altijd een kinderarts vóór elk gebruik bij baby’s of kinderen.",
+  ro: "Acest conținut are scop informativ și nu constituie sfat medical. Uleiurile esențiale nu sunt destinate să diagnosticheze, să trateze, să vindece sau să prevină vreo boală; consultă întotdeauna medicul pediatru înainte de orice utilizare care implică bebeluși sau copii.",
+  pl: "Ta treść ma charakter wyłącznie informacyjny i nie stanowi porady medycznej. Olejki eteryczne nie służą do diagnozowania, leczenia ani zapobiegania chorobom; przed jakimkolwiek użyciem u niemowląt lub dzieci zawsze skonsultuj się z pediatrą.",
+  ja: "本記事は一般的な情報提供のみを目的としており、医療アドバイスではありません。エッセンシャルオイルは病気の診断・治療・治癒・予防を目的としたものではありません。赤ちゃんやお子様に関わる使用の前に、必ず小児科医にご相談ください。",
+  ar: "هذا المحتوى لأغراض المعلومات العامة فقط وليس نصيحة طبية. الزيوت الأساسية ليست مخصّصة لتشخيص أو علاج أو شفاء أو الوقاية من أي مرض؛ استشر دائمًا طبيب أطفال قبل أي استخدام يخص الرضّع أو الأطفال.",
+}
+
+function ensureNicheDisclaimer(content: string, languageCode: string): string {
+  const disc = NICHE_DISCLAIMERS[languageCode] ?? NICHE_DISCLAIMERS.en
+  if (content.includes(disc.slice(0, 40))) return content
+  const line = '*' + disc + '*'
+  if (content.trimEnd().endsWith('---')) {
+    const hr = content.lastIndexOf('---')
+    return content.slice(0, hr) + line + '\n\n' + content.slice(hr)
+  }
+  return content.trimEnd() + '\n\n' + line + '\n'
+}
+
 async function getSoroSlugs(): Promise<Set<string>> {
   if (_soroCache && Date.now() - _soroCache.at < 3_600_000) return _soroCache.slugs
   try {
@@ -758,6 +787,7 @@ export async function POST(req: NextRequest) {
 
     // Post-processing: sanitize any invented URLs, then strip em/en-dashes (byline preserved)
     let finalContent = parsed.content_markdown
+    finalContent = ensureNicheDisclaimer(finalContent, brand.language_code)
     // 25 ago 2026: il frontend rende gia il suo h1 dal titolo — il "# Titolo" nel markdown ne
     // creava un SECONDO identico su ogni pagina (h1 doppio misurato su 10 brand su 12). Il
     // titolo vive nella colonna title: dal corpo si toglie alla nascita.
