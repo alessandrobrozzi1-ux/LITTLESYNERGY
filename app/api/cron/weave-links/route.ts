@@ -7,7 +7,9 @@ import { runWeave } from '@/lib/weave-links'
 // vecchi (embeddings, threshold 0.5). Marker HTML-comment: re-run sostituisce, rollback pulito.
 // Consuma sniper_reinforce (Operazione Cecchino). Dettagli e regole in lib/weave-links.ts.
 // ?dry=1 = preview senza scritture.
-export const maxDuration = 60
+// 30 ago 2026: con la campagna pagine-morte la coda sniper_reinforce arriva a centinaia di
+// righe e 60s non bastano (504 misurato sul Main e su Tail). Piano Pro: budget pieno.
+export const maxDuration = 300
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization')

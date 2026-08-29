@@ -121,6 +121,7 @@ export type WeaveReport = {
   skipped_no_embedding: number
   skipped_no_related: number
   skipped_block_full: number
+  reinforce_replaced: number
   reinforce_consumed: number
   warnings: string[]
   touched: { slug: string; language_code: string; added: string[] }[]
@@ -152,6 +153,7 @@ export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { 
   const report: WeaveReport = {
     new_articles: 0, reinforce_rows: 0, old_touched: 0, links_grafted: 0,
     skipped_no_embedding: 0, skipped_no_related: 0, skipped_block_full: 0, reinforce_consumed: 0,
+    reinforce_replaced: 0,
     warnings: [], touched: [],
   }
   const { data: brands } = await supabase.from('brands').select('id, language_code, domain')
@@ -207,6 +209,10 @@ ${l.anchor}`
       .from('sniper_reinforce')
       .select('id, brand_id, language_code, page, query')
       .eq('status', 'pending')
+      // 30 ago 2026: la coda puo essere grande (campagna pagine morte). Un lotto per run
+      // tiene la funzione nel budget; il resto lo smaltiscono le run successive (cron giornaliero).
+      .order('created_at', { ascending: true })
+      .limit(60)
     if (error) throw new Error(error.message)
     report.reinforce_rows = (reinforce ?? []).length
     for (const r of reinforce ?? []) {
@@ -251,10 +257,22 @@ ${l.anchor}`
     const merged: WeaveLink[] = [...existing]
     const added: string[] = []
     const addedLinks: WeaveLink[] = []
+    // 30 ago 2026 — precedenza ai rinforzi (campagna pagine-morte, collaudata sul Main):
+    // un link ordinario punta di norma a una pagina gia viva, un rinforzo salva una pagina
+    // mai mostrata da Google. Blocco pieno -> il rinforzo sostituisce l ultimo preesistente:
+    // restano 3 link, cambia solo quale. Senza questo la coda si blocca (0 innesti a giro).
+    let existingLeft = existing.length
     for (const l of newLinks) {
       if (l.url === selfUrl) continue // mai self-link
       if (merged.some(m => m.url === l.url)) continue
-      if (merged.length >= MAX_LINKS) { report.skipped_block_full++; continue }
+      if (merged.length >= MAX_LINKS) {
+        const isReinforce = reinforceByLink.has(linkKey(l))
+        if (isReinforce && existingLeft > 0) {
+          merged.splice(existingLeft - 1, 1)
+          existingLeft--
+          report.reinforce_replaced++
+        } else { report.skipped_block_full++; continue }
+      }
       merged.push(l)
       added.push(l.anchor)
       addedLinks.push(l)
