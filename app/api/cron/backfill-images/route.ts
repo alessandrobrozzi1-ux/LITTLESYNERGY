@@ -92,7 +92,10 @@ async function runWithWeave() {
   const images = await run()
   let weave: Record<string, unknown> = {}
   try {
-    const r = await runWeave(createAdminClient(), { dry: false, windowDays: 7 })
+    // 30 ago 2026: qui il weave gira DENTRO il budget 60s del backfill. Con la campagna
+    // pagine-morte un lotto pieno (60 rinforzi) lo sforerebbe, facendo saltare le immagini:
+    // lotto piccolo qui, lotto pieno sulla route dedicata /api/cron/weave-links (300s).
+    const r = await runWeave(createAdminClient(), { dry: false, windowDays: 7, reinforceLimit: 8 })
     weave = { links_grafted: r.links_grafted, old_touched: r.old_touched }
   } catch (e) {
     weave = { error: e instanceof Error ? e.message.slice(0, 120) : 'weave failed' }

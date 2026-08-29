@@ -149,7 +149,7 @@ function parseEmbedding(raw: unknown): number[] | null {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any — i brand con schema DB custom
 // (yardforge, networktruth, …) hanno un client tipizzato sul loro schema: tipo permissivo così il
 // motore resta IDENTICO in tutti i repo, senza fork per-brand.
-export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { dry: boolean; windowDays?: number }): Promise<WeaveReport> {
+export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { dry: boolean; windowDays?: number ; reinforceLimit?: number }): Promise<WeaveReport> {
   const report: WeaveReport = {
     new_articles: 0, reinforce_rows: 0, old_touched: 0, links_grafted: 0,
     skipped_no_embedding: 0, skipped_no_related: 0, skipped_block_full: 0, reinforce_consumed: 0,
@@ -212,7 +212,7 @@ ${l.anchor}`
       // 30 ago 2026: la coda puo essere grande (campagna pagine morte). Un lotto per run
       // tiene la funzione nel budget; il resto lo smaltiscono le run successive (cron giornaliero).
       .order('created_at', { ascending: true })
-      .limit(60)
+      .limit(opts.reinforceLimit ?? 60)
     if (error) throw new Error(error.message)
     report.reinforce_rows = (reinforce ?? []).length
     for (const r of reinforce ?? []) {
