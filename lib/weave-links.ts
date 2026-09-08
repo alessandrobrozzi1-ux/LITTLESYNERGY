@@ -149,6 +149,20 @@ function parseEmbedding(raw: unknown): number[] | null {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any — i brand con schema DB custom
 // (yardforge, networktruth, …) hanno un client tipizzato sul loro schema: tipo permissivo così il
 // motore resta IDENTICO in tutti i repo, senza fork per-brand.
+/**
+ * 8 set 2026 — ROTAZIONE del lotto. Il lotto giornaliero (8 righe dentro backfill-images)
+ * prendeva SEMPRE le 8 piu vecchie: se quelle 8 non trovano posto (correlati col blocco
+ * pieno) la coda resta ferma per sempre — misurato sul Main: 41 pending, 0 consumi in 6
+ * giorni. Si legge la coda intera (max 60) e si parte da un offset che ruota ogni giorno:
+ * ogni riga arriva al suo turno, nessuna blocca le altre.
+ */
+function ruotaLotto<T>(rows: T[], n: number): T[] {
+  if (!rows.length || n >= rows.length) return rows
+  const giorno = Math.floor(Date.now() / 864e5)
+  const off = (giorno * n) % rows.length
+  return [...rows.slice(off), ...rows.slice(0, off)].slice(0, n)
+}
+
 export async function runWeave(supabase: SupabaseClient<any, any, any>, opts: { dry: boolean; windowDays?: number ; reinforceLimit?: number }): Promise<WeaveReport> {
   const report: WeaveReport = {
     new_articles: 0, reinforce_rows: 0, old_touched: 0, links_grafted: 0,
@@ -212,10 +226,12 @@ ${l.anchor}`
       // 30 ago 2026: la coda puo essere grande (campagna pagine morte). Un lotto per run
       // tiene la funzione nel budget; il resto lo smaltiscono le run successive (cron giornaliero).
       .order('created_at', { ascending: true })
-      .limit(opts.reinforceLimit ?? 60)
+      .limit(60)
     if (error) throw new Error(error.message)
-    report.reinforce_rows = (reinforce ?? []).length
-    for (const r of reinforce ?? []) {
+    const codaRinforzi = reinforce ?? []
+    const lotto = opts.reinforceLimit ? ruotaLotto(codaRinforzi, opts.reinforceLimit) : codaRinforzi
+    report.reinforce_rows = lotto.length
+    for (const r of lotto) {
       const slug = String(r.page).replace(/\/+$/, '').split('/').pop() ?? ''
       const { data: target } = await supabase
         .from('articles').select('id, slug, title').eq('brand_id', r.brand_id).eq('slug', slug).eq('status', 'published').limit(1).single()
@@ -224,8 +240,16 @@ ${l.anchor}`
         .from('article_embeddings').select('embedding').eq('article_id', target.id).single()
       const embedding = parseEmbedding(embRow?.embedding)
       if (!embedding) { report.skipped_no_embedding++; continue }
-      const related = await findRelatedArticles(r.brand_id, embedding, target.id, MAX_LINKS, SIM_THRESHOLD)
-      if (!related.length) { report.skipped_no_related++; continue }
+      // 8 set 2026 — piu candidati, ospiti meno carichi. Coi soli 3 correlati piu simili i rinforzi
+      // si contendevano gli stessi ospiti e chi perdeva restava pending a vita (dry-run Main: 27 su
+      // 41 "blocco pieno"). Si chiedono 3x candidati e si tengono i 3 con meno link gia pianificati
+      // in questa run: stessa pertinenza (tutti sopra soglia), molte meno collisioni.
+      const candidati = await findRelatedArticles(r.brand_id, embedding, target.id, MAX_LINKS * 3, SIM_THRESHOLD)
+      if (!candidati.length) { report.skipped_no_related++; continue }
+      const related = candidati
+        .map((c, i) => ({ c, i, carico: plan.get(c.article_id)?.length ?? 0 }))
+        .sort((a, b) => a.carico - b.carico || a.i - b.i)
+        .map(x => x.c)
       const anchor = String(r.query).charAt(0).toUpperCase() + String(r.query).slice(1)
       for (const rel of related.slice(0, MAX_LINKS)) {
         if (rel.slug === target.slug) continue

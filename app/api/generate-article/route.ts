@@ -5,6 +5,9 @@ import { fetchTrendingKeywords } from '@/lib/trends'
 import { fetchFeaturedImage } from '@/lib/unsplash'
 import { getWorldLinkUrl } from '@/lib/world-link-markets'
 import { calculateSeoScore } from '@/lib/seo-score'
+import { fixTitle, fixMetaDescription, ensureLinkCountFloor, type RecentArticle } from '@/lib/seo-floor'
+import { ensureWordFloor } from '@/lib/word-floor'
+import { repairAffiliateLinks, stripDeadArticleLinks } from '@/lib/link-repair'
 import { generateEmbedding, storeArticleEmbedding, findRelatedArticles } from '@/lib/embeddings'
 import { pingIndexNow } from '@/lib/indexnow'
 import { publicUrl } from '@/lib/weave-links'
@@ -604,6 +607,7 @@ TITLE REQUIREMENTS (HARD CONSTRAINT):
 - ✅ GOOD (34): "How to Buy doTERRA, Step by Step"
 - ✅ GOOD (38): "Gentle Essential Oils for Kids Sleep"
 - If your draft title exceeds 58 characters or contains a colon, rewrite it before outputting.
+- The title MUST naturally contain the main keyword — at minimum its first significant word. Never ship a title that omits the keyword entirely.
 
 Output format (use exactly these markers):
 ---TITLE---
@@ -810,6 +814,21 @@ export async function POST(req: NextRequest) {
     if (!/^#\s+/.test(finalContent.replace(/^﻿?\s*/, ''))) {
       finalContent = `# ${parsed.title}\n\n${finalContent.replace(/^\s+/, '')}`
     }
+    // ═══ RIPARAZIONE LINK (7 set 2026) ═══ Google segnalava 404: il modello scrive link
+    // affiliati senza host (risolti sul NOSTRO dominio = vendita persa) e cita articoli
+    // inesistenti. Misurati 133 casi sullo storico dell impero, tutti riparati.
+    {
+      const { data: slugRow } = await supabase
+        .from('articles')
+        .select('slug')
+        .eq('brand_id', brand_id)
+        .eq('status', 'published')
+      const slugSet = new Set((slugRow ?? []).map((r: { slug: string }) => r.slug))
+      slugSet.add(safeSlug)
+      finalContent = repairAffiliateLinks(finalContent, brand.affiliate_base_url ?? undefined)
+      finalContent = stripDeadArticleLinks(finalContent, slugSet, brand.domain)
+    }
+
     // FINAL PASS anti-slash: sanitizeProductUrls ricostruisce /p/${slug}/?OwnerID (slash hardcoded) —
     // la normalizzazione DEVE chiudere la pipeline, FUORI da ogni if (lezione 31 lug, doppia)
     // Human-writing-law net (validata sul pilota, ondata 3): frase-AI bandita → rewrite flash.
@@ -830,6 +849,25 @@ export async function POST(req: NextRequest) {
     }
 
     // Featured image + SEO score (parallel)
+    // ═══ WORD FLOOR (1 set 2026): sotto le ~900 parole lo scorer toglie 8 punti secchi e
+    // Google ha meno da indicizzare — una chiamata flash aggiunge sezioni di sostanza.
+    // No-op totale quando l articolo nasce gia lungo (l 80% dei casi). ═══
+    finalContent = await ensureWordFloor(finalContent, brand.language_name, finalKeyword)
+
+    // ═══ SEO FLOOR (1 set 2026): meta e titolo nel range dello scorer e almeno 5 link
+    // gia alla nascita (blocco "Articoli correlati" con gli ultimi del brand), cosi il
+    // punteggio salvato nasce ~100 invece di maturare in silenzio dopo la maglia. ═══
+    const { data: recentiFloor } = await supabase
+      .from('articles')
+      .select('title, slug')
+      .eq('brand_id', brand_id)
+      .eq('status', 'published')
+      .order('published_at', { ascending: false })
+      .limit(6)
+    parsed.title = fixTitle(parsed.title, brand.language_code)
+    parsed.meta_description = fixMetaDescription(parsed.meta_description, brand.language_code)
+    finalContent = ensureLinkCountFloor(finalContent, brand.language_code, (recentiFloor ?? []) as RecentArticle[], brand.domain, safeSlug)
+
     const [featuredImage, seoScore] = await Promise.all([
       fetchFeaturedImage(finalKeyword),
       Promise.resolve(calculateSeoScore(finalContent, parsed.title, parsed.meta_description, finalKeyword, false)),

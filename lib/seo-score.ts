@@ -31,8 +31,12 @@ export function calculateSeoScore(
   const wordCount = cjkChars > spaceWords ? Math.round(cjkChars / 2) + spaceWords : spaceWords
   const headings = (content.match(/^#{1,3} .+/gm) ?? []).length
   const links = (content.match(/\[([^\]]+)\]\(([^)]+)\)/g) ?? []).length
-  const metaLen = metaDescription.length
-  const titleLen = title.length
+  // 1 set 2026: titoli e meta CJK dicono in meta' dei caratteri cio che le lingue latine
+  // dicono per esteso — un titolo giapponese da 15 caratteri e' pieno, non "corto". Peso 2x
+  // i caratteri CJK nelle soglie di lunghezza (stessa filosofia del wordCount qui sopra).
+  const cjkWeight = (s: string) => s.length + ((s.match(/[぀-ヿ一-鿿㐀-䶿]/g) ?? []).length)
+  const metaLen = cjkWeight(metaDescription)
+  const titleLen = cjkWeight(title)
   const hasKeywordInTitle = title.toLowerCase().includes(keyword.toLowerCase().split(' ')[0])
   // 25 ago 2026: il rilevamento FAQ pretendeva una MAIUSCOLA LATINA a inizio domanda: le FAQ
   // giapponesi (**子供がいる部屋で…？**) e arabe non venivano mai viste (+5 punti persi a priori).

@@ -18,10 +18,10 @@ export function heroModelForLang(lang?: string): string | undefined {
 /**
  * Generate one hero image from a prompt and return its raw bytes.
  * @param prompt  image prompt (unchanged from buildImagePrompt)
- * @param width   default 1792 (blog hero); pass 1024 for a vertical Pinterest pin
+ * @param width   default 1280 (blog hero, 0.92MP: fal fattura a megapixel e il servito e <=800px); pass 1024 for a vertical Pinterest pin
  * @param height  default 1024 (blog hero); pass 1536 for a vertical Pinterest pin
  */
-export async function generateHeroImage(prompt: string, width = 1792, height = 1024, modelOverride?: string): Promise<Buffer> {
+export async function generateHeroImage(prompt: string, width = 1280, height = 720, modelOverride?: string): Promise<Buffer> {
   const key = process.env.FAL_KEY
   if (!key) throw new Error('FAL_KEY missing from environment')
   const model = modelOverride ?? FAL_MODEL
