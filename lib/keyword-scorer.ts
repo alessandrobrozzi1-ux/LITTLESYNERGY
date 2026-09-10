@@ -53,6 +53,18 @@ export function hasNicheModifier(keyword: string, languageCode: string): boolean
   return re ? re.test(keyword) : true
 }
 
+/**
+ * ═══ PERCHE IL PROMPT PRETENDE CONFRONTI E RECENSIONI (10 set 2026) ═══
+ *
+ * Posizione media per FORMA della ricerca, 28 giorni di Search Console, impero intero:
+ *   recensione/opinioni pos 30,5 (34,6% delle impression entro la 20esima) · confronto 35,2 (12,2%)
+ *   generica 46,8 (7,6%) · media 3-4 parole 60,6 · coda lunga 62,6 · domanda 62,8 (1,6%)
+ * Produzione nello stesso momento: 1,1% confronti, 0,8% recensioni, 89% topicale — quasi tutto
+ * lo sforzo dove rendiamo peggio. Su "come usare X" competiamo con anni di autorita altrui; su
+ * "X vs Y" non compete quasi nessuno e chi cerca sta per comprare.
+ * Vincolo 2 su 6: sposta il baricentro misurando, non sostituisce la base topicale.
+ * Verifica: scripts/che-query-vinciamo.mjs
+ */
 export async function scoredKeywords(languageCode: string, usedKeywords: Set<string>, nicheContext?: string): Promise<ScoredKeyword[]> {
   const niche = nicheContext ?? NICHE_CONTEXT[languageCode] ?? NICHE_CONTEXT_DEFAULT
   const langLabel = languageCode
@@ -74,6 +86,10 @@ Generate 6 SEO keyword ideas. For each keyword provide:
 - relevance: relevance to doTERRA/essential oils niche 1-10
 
 Prioritize: high relevance (8-10) + medium/high volume + easy/medium difficulty = best opportunity.
+SEARCH SHAPE (mandatory): at least 2 of the 6 keywords must be either a COMPARISON
+("X vs Y", "X or Y", "difference between X and Y") or a REVIEW/OPINION ("X review", "X opinions",
+"is X worth it"), written naturally in the target language. Compare or review things that really
+exist in this niche (two products, two ingredients, two methods, two brands) — never invent a product.
 Focus on informational and commercial intent keywords.
 
 CRITICAL NICHE RULE (mandatory): EVERY keyword MUST be in the context of CHILDREN, BABIES, TODDLERS, MOMS, PREGNANCY or BREASTFEEDING (e.g. "essential oils for kids' sleep", "safe oils during pregnancy", "calming oils for toddlers", "aceites para dormir niños"). NEVER return a generic adult essential-oil keyword (e.g. "essential oils for sleep", "lavender oil benefits", "aromatherapy at home", "aceites para dormir mejor"). If a keyword lacks a kids/baby/toddler/child/mom/pregnancy angle, do NOT include it.
