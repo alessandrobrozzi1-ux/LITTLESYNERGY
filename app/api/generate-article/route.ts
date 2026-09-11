@@ -14,6 +14,7 @@ import { publicUrl } from '@/lib/weave-links'
 import type { Brand } from '@/lib/types'
 import { ensureQualitativePricing } from '@/lib/qualitative-pricing'
 import { ensureHumanProse } from '@/lib/human-prose'
+import { istruzioniForma } from '@/lib/forma-query'
 
 export const maxDuration = 120
 
@@ -569,54 +570,6 @@ const LANG_LENGTH_OVERRIDE: Record<string, string> = {
   ar: '450-550', ja: '450-550',
 }
 
-/**
- * ═══ FORMA DELL'ARTICOLO = FORMA DELLA RICERCA (11 set 2026) ═══
- *
- * Le keyword giornaliere contengono per forza 2 confronti/recensioni su 6, perche misurato su
- * Search Console si posizionano ~30 posizioni sopra le domande (recensioni pos 30,5 · confronti
- * 35,2 · domande 62,8). Ma la keyword da sola non basta: chi cerca "X vs Y" vuole UNA risposta,
- * chi cerca "X opinioni" vuole un verdetto. Se l'articolo non gliela da, rimbalza.
- *
- * ⚠️ Le congiunzioni corte ("oppure") vanno legate alla LINGUA: "of" e "oppure" in olandese ma e
- * la preposizione piu comune dell'inglese, e "o" apre mezzo portoghese ("o que e..."). Applicate
- * ovunque, "benefits of lavender oil" diventava un confronto — misurato, non ipotizzato.
- */
-const KW_CONFRONTO_UNIV = /(vs|versus|meglio d|better than|difference between|differenza tra|comparison|comparativa|vergleich|unterschied|comparaison|compara[çc][ãa]o|melhor que|mejor que|cual es mejor|qual [eé] melhor|比較|どっち|أفضل من)/i
-/** "oppure" per lingua: solo dove quella parola significa davvero quello. */
-const KW_OPPURE: Record<string, RegExp> = {
-  it: /(o|oppure)/i, es: /o/i, pl: /czy/i, de: /oder/i,
-  nl: /of/i, fr: /ou/i, pt: /ou/i, ro: /sau/i,
-}
-const KW_RECENSIONE = /(review|recensione|opinioni|avis|erfahrungen|bewertung|rese[ñn]a|opiniones|an[áa]lise|recenzie|beoordeling|opinie|merita|vale la pena|worth it|ne vale|口コミ|レビュー|مراجعة)/i
-
-function formaArticolo(keyword: string, lang: string): string {
-  const oppure = KW_OPPURE[(lang || '').toLowerCase()]
-  if (KW_CONFRONTO_UNIV.test(keyword) || (oppure && oppure.test(keyword))) {
-    return `
-FORMA DELL'ARTICOLO — CONFRONTO (la ricerca mette due cose a paragone):
-Chi cerca cosi vuole UNA risposta: quale dei due, per il suo caso. Un articolo che descrive
-entrambi senza scegliere non gli serve, e torna indietro.
-- Il TITOLO deve tenere il confronto esplicito (entrambi i nomi), non trasformarsi in un titolo generico.
-- Le PRIME righe dopo l'introduzione devono gia dire quale conviene e a chi: non far aspettare la risposta.
-- La tabella di confronto obbligatoria mette a paragone ESATTAMENTE le due cose della ricerca,
-  riga per riga sui criteri che contano per chi sceglie (non una tabella generica di caratteristiche).
-- Almeno una sezione "quale scegliere se…" con i casi d'uso concreti: per chi va bene l'uno, per chi l'altro.
-- Sii onesto sui difetti di entrambi: un confronto che elogia tutto non decide niente e non convince nessuno.`
-  }
-  if (KW_RECENSIONE.test(keyword)) {
-    return `
-FORMA DELL'ARTICOLO — RECENSIONE / OPINIONI (la ricerca chiede un giudizio):
-Chi cerca cosi vuole un verdetto motivato, non una scheda prodotto.
-- Il TITOLO deve promettere il giudizio (opinioni, recensione, ne vale la pena), non solo il nome del prodotto.
-- Dai il VERDETTO nelle prime righe dopo l'introduzione: vale o non vale, e per chi.
-- Una sezione con i PRO e una con i CONTRO, entrambe concrete. Se non trovi nessun contro credibile,
-  non stai recensendo: stai facendo pubblicita, e si vede.
-- Chiudi con "a chi conviene e a chi no", esplicito.
-- Resta dentro cio che si puo affermare davvero: niente esperienze personali inventate, niente
-  risultati promessi. Il giudizio si argomenta con caratteristiche, usi e limiti reali.`
-  }
-  return ''
-}
 
 function buildUserPrompt(brand: Brand, keyword: string, length: 'short' | 'medium' | 'long' = 'medium'): string {
   const cfg = LENGTH_CONFIG[length]
@@ -626,7 +579,7 @@ function buildUserPrompt(brand: Brand, keyword: string, length: 'short' | 'mediu
     ? `\n\nPILLAR TONE (IMPORTANT — this is the getting-started / how-to-buy cornerstone, read by a mom deciding whether to register): make this the MOST personal, warm, mom-to-mom piece on the site. Open by meeting the reader exactly where she is ("if you're here, you're probably wondering…", "I remember feeling confused too when I first looked into this"). Tell it as your OWN lived experience in the first person ("what I figured out was…", "here's how it actually worked for me"). Reassure, never sell: no pressure, no hype, no salesy lines. The warmth must be the BACKBONE of the whole article, not a few sprinkled phrases. Keep every safety and factual rule intact (free registration, no kit required, no prices, CPTG wording, no income claims, no "lifetime" discount, children safety): only the VOICE gets warmer, never the facts.`
     : ''
   return `Write a complete SEO article (${words} words, HARD CAP, do NOT exceed) in ${brand.language_name} about: "${keyword}"
-${formaArticolo(keyword, brand.language_code)}
+${istruzioniForma(keyword, brand.language_code)}
 Keep it TIGHT: warmth lives in the VOICE, not in length. Moms skim, so ${words} words is the CEILING, never a floor to pad toward.
 
 REQUIRED STRUCTURE (follow exactly):

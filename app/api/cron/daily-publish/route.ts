@@ -5,6 +5,7 @@ import { fetchTrendingKeywords } from '@/lib/trends'
 import sharp from 'sharp'
 import { buildImagePrompt, NICHE } from '@/lib/image-prompt'
 import { generateValidatedHeroImage, heroModelForLang } from '@/lib/hero-image'
+import { haForma, ultimiHannoForma } from '@/lib/forma-query'
 
 export const maxDuration = 300
 
@@ -162,6 +163,28 @@ export async function getKeywordForBrand(
   }
 
   // ── 5. Best pending keyword from DB ─────────────────────────────────────────
+  // ⚠️ QUOTA DI FORMA (11 set 2026) — e perche non basta il punteggio.
+  // Misurato su Search Console: recensioni pos 30,5 · confronti 35,2 · domande 62,8. Le keyword
+  // giornaliere contengono 2 confronti/recensioni su 6 — ma non venivano MAI usate: il punteggio
+  // premia il volume (low 10 / high 50) e un confronto e per natura a volume basso, quindi faceva
+  // ~80 contro gli ~85 delle generiche. Misurato: il miglior confronto in coda era al POSTO 109
+  // su 400, e la coda si riempie ogni giorno di generiche: non sarebbe stato pescato mai.
+  // Gonfiare il punteggio era la soluzione sbagliata (ne entrano 2 al giorno e se ne consuma 1:
+  // sarebbero diventati il 100%). Qui la quota e esplicita: se negli ultimi 3 articoli del brand
+  // non c'e nessun confronto/recensione, il prossimo lo e. Poi si torna al punteggio. ~1 su 3.
+  if (!(await ultimiHannoForma(supabase, brandId, languageCode, 3))) {
+    const { data: codaForma } = await supabase
+      .from('keywords')
+      .select('id, keyword, score')
+      .eq('brand_id', brandId)
+      .eq('status', 'pending')
+      .order('score', { ascending: false })
+      .limit(200) // 10 non bastano: i confronti stanno sotto le generiche ad alto volume
+    const conForma = (codaForma ?? []).filter((k: { keyword: string }) => haForma(k.keyword, languageCode))
+    const scelta = conForma.find((k: { keyword: string }) => isAllowed(k.keyword)) ?? conForma[0]
+    if (scelta) return { keyword: scelta.keyword, keywordId: scelta.id, source: 'pending:forma' }
+  }
+
   const { data: pending } = await supabase
     .from('keywords')
     .select('id, keyword, score')
