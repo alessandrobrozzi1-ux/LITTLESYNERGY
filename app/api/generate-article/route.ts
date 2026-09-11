@@ -15,6 +15,7 @@ import type { Brand } from '@/lib/types'
 import { ensureQualitativePricing } from '@/lib/qualitative-pricing'
 import { ensureHumanProse } from '@/lib/human-prose'
 import { istruzioniForma } from '@/lib/forma-query'
+import { competenzePer } from '@/lib/competenze'
 
 export const maxDuration = 120
 
@@ -372,7 +373,13 @@ const AUTHOR_LINES: Record<string, string> = {
   pl: 'Od zespołu LittleSynergy, mamy, Wellness Advocates i miłośniczki doTERRA',
 }
 
-function buildSystemPrompt(brand: Brand, linkExpert: LinkExpertEntry[], worldLinkUrl?: string): string {
+function buildSystemPrompt(brand: Brand, linkExpert: LinkExpertEntry[], worldLinkUrl?: string, keyword = ''): string {
+  // ⚠️ 11 set 2026 — COMPETENZA DI MESTIERE, non esperti inventati. Le firme finte su temi di
+  // salute ingannano chi legge e in una nicchia YMYL fanno retrocedere il dominio. Qui entra la
+  // competenza vera (diluizioni coi numeri, vettori e perche, nomi botanici, controindicazioni),
+  // che e anche cio che distingue una pagina che si posiziona. Max 2 blocchi tematici oltre alla
+  // base. I brand non-oli ricevono '' e il prompt resta identico a prima. Vedi lib/competenze.ts.
+  const competenza = competenzePer(keyword, /doterra|essential oil|oli essenziali|aceites esenciales|huiles essentielles|ätherische|óleos essenciais|uleiuri esentiale|etherische|olejki/i.test(String(brand.brand_dna_business_type ?? '') + ' ' + String(brand.brand_name ?? '')))
   const fallbackUrl = worldLinkUrl ?? brand.affiliate_base_url ?? 'https://www.doterra.com/US/en/shop/essential-oils'
   const authorLine = AUTHOR_LINES[brand.language_code] ?? AUTHOR_LINES.en
 
@@ -549,7 +556,7 @@ ${brand.brand_dna_brand_voice}
 *${authorLine}*
 8. DEPTH & LENGTH DISCIPLINE. Write a complete, authoritative guide that lands INSIDE the word-count range given in the user prompt. Treat the upper bound as a HARD CAP — never exceed it. Depth comes from specificity and useful detail, never from padding or extra length. Warm does NOT mean long-winded: moms read in a hurry, so make every sentence earn its place.
 9. THE FAQ SECTION IS NON-NEGOTIABLE. Every article ends with a real FAQ section under its own heading, written in ${brand.language_name}. If you are running out of room, delete a body paragraph, NEVER the FAQ. An article without an FAQ heading is a failed article.
-═══════════════════════════════════════════════════════${jpCompliance}${arCompliance}${ptRegister}${productMechanism}${universalDoterraRules}${childrenSafety}`
+═══════════════════════════════════════════════════════${jpCompliance}${arCompliance}${ptRegister}${productMechanism}${universalDoterraRules}${childrenSafety}${competenza}`
 }
 
 const LENGTH_CONFIG = {
@@ -740,7 +747,7 @@ export async function POST(req: NextRequest) {
 
     // prompt caching è una feature Anthropic nativa: non inviarla a DeepSeek
     const anthropicNative = !test_model && !deepseekDefault
-    const systemText = buildSystemPrompt(brand as Brand, linkExpert, worldLinkUrl)
+    const systemText = buildSystemPrompt(brand as Brand, linkExpert, worldLinkUrl, keyword)
     const systemBlock = anthropicNative
       ? [{ type: 'text', text: systemText, cache_control: { type: 'ephemeral' } }]
       : [{ type: 'text', text: systemText }]
