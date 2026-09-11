@@ -41,16 +41,26 @@ const OPPURE_PER_LINGUA: Record<string, RegExp> = {
   ro: /\bsau\b/i,
 }
 
-const RECENSIONE = /(\breview\b|\brecensione\b|\bopinioni\b|\bavis\b|\berfahrungen\b|\bbewertung\b|\brese[ñn]a\b|\bopiniones\b|\ban[áa]lise\b|\brecenzie\b|\bbeoordeling\b|\bopinie\b|\bmerita\b|\bvale la pena\b|\bworth it\b|\bne vale\b|口コミ|レビュー|مراجعة)/i
+const RECENSIONE = /(\breview\b|\brecensione\b|\bopinioni\b|\bopinii\b|\bpareri\b|\bavis\b|\berfahrungen\b|\bbewertung\b|\brese[ñn]a\b|\bopiniones\b|\ban[áa]lise\b|\brecenzi|\bbeoordeling\b|\bopinie\b|\bmerita\b|\bvale la pena\b|\bworth it\b|\bne vale\b|口コミ|レビュー|مراجعة)/i
 
 export type Forma = 'confronto' | 'recensione' | null
+
+/**
+ * ⚠️ 11 set 2026 — i DIACRITICI. Il rumeno "Merită? Recenzia Mea" NON veniva riconosciuto come
+ * recensione: `\bmerita\b` non matcha "merită". Misurato su un articolo vero pubblicato oggi.
+ * Rimedio: si prova sia la stringa originale sia quella senza segni diacritici.
+ * Perche ENTRAMBE e non solo la normalizzata: NFD scompone anche il giapponese ("レビュー"
+ * diventa qualcos'altro e smette di matchare), quindi normalizzare e basta romperebbe il ja.
+ */
+const senzaAccenti = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '')
+const provaDoppia = (re: RegExp, t: string) => re.test(t) || re.test(senzaAccenti(t))
 
 /** La forma di una ricerca (o di un titolo). `lang` e il language_code del brand. */
 export function formaDi(testo: string, lang: string): Forma {
   const t = String(testo ?? '')
   const oppure = OPPURE_PER_LINGUA[String(lang ?? '').toLowerCase()]
-  if (CONFRONTO_UNIVERSALE.test(t) || (oppure && oppure.test(t))) return 'confronto'
-  if (RECENSIONE.test(t)) return 'recensione'
+  if (provaDoppia(CONFRONTO_UNIVERSALE, t) || (oppure && provaDoppia(oppure, t))) return 'confronto'
+  if (provaDoppia(RECENSIONE, t)) return 'recensione'
   return null
 }
 
