@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { scoredKeywords } from '@/lib/keyword-scorer'
 
+// The pause returns before the request is read. Without this, Next prerenders
+// GET at build time and PUBLISH_PAUSED_UNTIL cannot turn the pause off later.
+export const dynamic = 'force-dynamic'
+
 async function run() {
   const t0 = Date.now()
   const supabase = createAdminClient()
@@ -65,6 +69,10 @@ async function run() {
 }
 
 export async function GET(req: NextRequest) {
+  if (Date.now() < Date.parse(process.env.PUBLISH_PAUSED_UNTIL ?? '2026-11-11T00:00:00Z')) {
+    console.log('[daily-keywords] skipped: paused_until_2026-11-11')
+    return NextResponse.json({ skipped: 'paused_until_2026-11-11' })
+  }
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })

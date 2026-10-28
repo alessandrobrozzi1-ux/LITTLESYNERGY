@@ -320,6 +320,10 @@ async function run() {
 }
 
 export async function GET(req: NextRequest) {
+  if (Date.now() < Date.parse(process.env.PUBLISH_PAUSED_UNTIL ?? '2026-11-11T00:00:00Z')) {
+    console.log('[daily-publish] skipped: paused_until_2026-11-11')
+    return NextResponse.json({ skipped: 'paused_until_2026-11-11' })
+  }
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -329,6 +333,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  if (Date.now() < Date.parse(process.env.PUBLISH_PAUSED_UNTIL ?? '2026-11-11T00:00:00Z')) {
+    console.log('[daily-publish] skipped: paused_until_2026-11-11')
+    return NextResponse.json({ skipped: 'paused_until_2026-11-11' })
+  }
   const auth = req.headers.get('authorization')
   if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
