@@ -93,11 +93,19 @@ async function run() {
 
 // 🔒 GATED da CRON_SECRET (come daily-publish / backfill-images)
 export async function GET(req: NextRequest) {
+  if (Date.now() < Date.parse(process.env.PUBLISH_PAUSED_UNTIL ?? '2026-11-11T00:00:00Z')) {
+    console.log('[catchup-publish] skipped: paused_until_2026-11-11')
+    return NextResponse.json({ skipped: 'paused_until_2026-11-11' })
+  }
   if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   return NextResponse.json(await run())
 }
 export async function POST(req: NextRequest) {
+  if (Date.now() < Date.parse(process.env.PUBLISH_PAUSED_UNTIL ?? '2026-11-11T00:00:00Z')) {
+    console.log('[catchup-publish] skipped: paused_until_2026-11-11')
+    return NextResponse.json({ skipped: 'paused_until_2026-11-11' })
+  }
   if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`)
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   return NextResponse.json(await run())
