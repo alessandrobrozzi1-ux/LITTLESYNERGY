@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { scoredKeywords } from '@/lib/keyword-scorer'
 
+// The pause returns before the request is read. Without this, Next prerenders
+// GET at build time and PUBLISH_PAUSED_UNTIL cannot turn the pause off later.
+export const dynamic = 'force-dynamic'
+
 async function run() {
   const t0 = Date.now()
   const supabase = createAdminClient()
